@@ -2,8 +2,6 @@
 
 # Project Description
 
-Hello ! My name is Dean Tan, this is my first serious project.
+AssetKid aims to be where art comes to be fractionalized.  
 
-Mission: 
-Vision: 
-
+Hello ! My name is Dean Tan, this is my first serious project. Currently I am the only developer here. So any pull request may take time to approve. 

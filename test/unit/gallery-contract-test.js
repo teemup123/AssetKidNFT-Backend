@@ -1830,6 +1830,29 @@ describe("Support Functions", function () {
 
     })
 
+    it("Collector withdraw support: BIA recoded accurately", async function (){
+        initAmt = 50
+        initPrice = 100
+
+        await galleryContract
+            .connect(creator)
+            .commercializeCollectionId(2, initAmt, initPrice)
+
+        supportAmt =2
+        await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
+
+        supportInfo = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
+        assert.equal(supportInfo[0], 0)
+        assert.equal(supportInfo[1], supportAmt)
+
+        await galleryContract.connect(collector1).withdrawSupport(2)
+
+        supportInfo = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
+        assert.equal(supportInfo[0], 0)
+        assert.equal(supportInfo[1], 0)
+
+    })
+
     // it("Gallery Approves: SFT recorded", async function(){
 
     // })

@@ -79,15 +79,15 @@ contract EscrowContract is ERC1155Holder, Ownable {
 
     }
 
-    function support(address supporterAddress, uint256 amount) // sftAmount that user supports
+    function support(address supporterAddress, uint256 amount, bool cancel) // sftAmount that user supports
         public
         onlyOwner
     {
         if (!SUPPORT_STATE) {
             revert EscrowContract__CannotSupport();
         }
-        address2SftAmtOwed[supporterAddress] = amount;
-        SUPPORT_AMOUNT += amount; // sft SUPPORT_AMOUNT increases by the user submitted amount
+        cancel ? address2SftAmtOwed[supporterAddress] = 0 : address2SftAmtOwed[supporterAddress] = amount;
+        cancel ? SUPPORT_AMOUNT -= amount : SUPPORT_AMOUNT += amount; // sft SUPPORT_AMOUNT increases by the user submitted amount
         address2BiaOwed[CREATOR_ADDRESS] = SUPPORT_AMOUNT * SUPPORT_PRICE; // amount submit by collector x price set by creator.
         
     }

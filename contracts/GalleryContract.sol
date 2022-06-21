@@ -207,7 +207,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         ];
 
         EscrowContract escrowContract;
-        uint256 biaSupported; 
+        uint256 biaSupported;
         //Checking condition for each Id
         for (uint256 i = 0; i < 10; i++) {
             // Check condition for each Id
@@ -231,21 +231,22 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
                 // Transfer supported BIA from escrow contract if NOT zero address
                 escrowContract = _escrowContract;
                 escrowContract.verifyCollection();
-                ( biaSupported, )= escrowContract.getYourSupportInfo(creatorAddress);// this [inside may not work] works.
+                (biaSupported, ) = escrowContract.getYourSupportInfo(
+                    creatorAddress
+                ); // this [inside may not work] works.
                 // this is 200.
-                // Cannot be called when 0th address is inputted. THIS ONLY HAS TO BE CALLED ONCE 
-                
+                // Cannot be called when 0th address is inputted. THIS ONLY HAS TO BE CALLED ONCE
             }
         }
 
-        if (address(escrowContract) != address(0)){
-             NFT_CONTRACT.safeTransferFrom(
-                    address(escrowContract),
-                    creatorAddress,
-                    0,
-                    biaSupported,
-                    ""
-                );
+        if (address(escrowContract) != address(0)) {
+            NFT_CONTRACT.safeTransferFrom(
+                address(escrowContract),
+                creatorAddress,
+                0,
+                biaSupported,
+                ""
+            );
         }
 
         address2UnapprovedCollection[creatorAddress] -= 1;
@@ -291,7 +292,27 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             biaAmount,
             ""
         );
-        escrow_contract.support(msg.sender, sftAmount);
+        escrow_contract.support(msg.sender, sftAmount, false);
+    }
+
+    function withdrawSupport(uint256 tokenId) public {
+        EscrowContract escrow_contract = getEscrowContract(tokenId);
+        (, uint256 sftOwed) = escrow_contract.getYourSupportInfo(msg.sender);
+        if (sftOwed == 0) {
+            revert GalleryContract__NotCollector();
+        }
+        // transfer nft back
+        (, , , uint256 price, ) = escrow_contract.getContractStatus();
+        uint256 biaOwed = sftOwed * price;
+        NFT_CONTRACT.safeTransferFrom(
+            address(escrow_contract),
+            msg.sender,
+            0,
+            biaOwed,
+            ""
+        );
+        // cancel record
+        escrow_contract.support(msg.sender, sftOwed, true);
     }
 
     function commercializeCollectionId(
@@ -317,7 +338,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         );
 
         //record in escrow
-        escrow_contract.commercialize( msg.sender ,amount, price);
+        escrow_contract.commercialize(msg.sender, amount, price);
     }
 
     function createSimpleCollectable(
@@ -530,20 +551,25 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     ) public onlyVerified(tokenId2CollectionId[tokenId]) {
         // This is required because STACK TOO DEEP error.
         EscrowContract escrow_contract = getEscrowContract(tokenId);
-        // Check for previous submission ? 
-        if(!escrow_contract.check4Submission(msg.sender, bid)){ return; }
+        // Check for previous submission ?
+        if (!escrow_contract.check4Submission(msg.sender, bid)) {
+            return;
+        }
         while (amount > 0) {
-            // get counter party if available. 
+            // get counter party if available.
             (
                 uint8 counterIndex,
                 address counterAddress,
                 uint256 counterPrice,
                 uint256 counterAmount,
                 bool counterFound
-            ) = getCounterPartyInfo(bid, tokenId); 
+            ) = getCounterPartyInfo(bid, tokenId);
 
             // if counter party not available (no highest bid or lowest ask) -> transfer asset to escrow and break
-            if (!counterFound || (bid ? counterPrice>price :price > counterPrice) ) {
+            if (
+                !counterFound ||
+                (bid ? counterPrice > price : price > counterPrice)
+            ) {
                 // transfer asset to escrow
                 assetToEscrowTransfer(
                     msg.sender, //_from from bidder or from asker
@@ -580,7 +606,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
                     : escrow_contract.reconcileBid(newCounterAmt, counterIndex);
                 break;
             }
-            // amount more than counterAtmount, reconcile 0 for counterAmt 
+            // amount more than counterAtmount, reconcile 0 for counterAmt
             bid
                 ? escrow_contract.reconcileAsk(0, counterIndex)
                 : escrow_contract.reconcileBid(0, counterIndex);
@@ -594,7 +620,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     {
         EscrowContract escrow_contract = getEscrowContract(tokenId);
         for (uint8 i = 0; i < 50; i++) {
-            (address refAddress, , uint256 refundAmount, bool active ) = bid
+            (address refAddress, , uint256 refundAmount, bool active) = bid
                 ? escrow_contract.getBidArrayInfo(i)
                 : escrow_contract.getAskArrayInfo(i);
 
@@ -718,13 +744,19 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         (counterIndex, counterFound) = bid
             ? escrow_contract.findLowestAsk()
             : escrow_contract.findHighestBid();
-        if (counterFound){
-        (counterAddress, counterPrice, counterAmount, ) = bid
-            ? escrow_contract.getAskArrayInfo(counterIndex)
-            : escrow_contract.getBidArrayInfo(counterIndex);
+        if (counterFound) {
+            (counterAddress, counterPrice, counterAmount, ) = bid
+                ? escrow_contract.getAskArrayInfo(counterIndex)
+                : escrow_contract.getBidArrayInfo(counterIndex);
         }
 
-        return (counterIndex, counterAddress, counterPrice, counterAmount, counterFound);
+        return (
+            counterIndex,
+            counterAddress,
+            counterPrice,
+            counterAmount,
+            counterFound
+        );
     }
 
     function getGalleryContractAddress()

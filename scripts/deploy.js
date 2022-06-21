@@ -78,10 +78,6 @@ async function main() {
         escrowContractAddress )
     escrow_ask_array = await escrowContract.connect(creator).getAskArrayInfo("0")
     console.log(`escrow contract info - ask Index 0 : ${escrow_ask_array}`)
-
-
-    
-
     console.log(`-------------------------------------------------------------------`)
 
     initCollect1BIA = await assetKidNftContract.connect(collector1).balanceOf(collector1.address, "0")

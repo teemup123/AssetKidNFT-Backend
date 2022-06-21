@@ -1813,6 +1813,23 @@ describe("Support Functions", function () {
         
     })
 
+    it("Collector withdraw support: BIA transfer back to creator", async function (){
+        initAmt = 50
+        initPrice = 100
+
+        await galleryContract
+            .connect(creator)
+            .commercializeCollectionId(2, initAmt, initPrice)
+
+        supportAmt =2
+        await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
+        await galleryContract.connect(collector1).withdrawSupport(2)
+
+        collectorBia = await assetKidNftContract.connect(creator).balanceOf(collector1.address, "0")
+        assert.equal(collectorBia, 1000)
+
+    })
+
     // it("Gallery Approves: SFT recorded", async function(){
 
     // })
@@ -1821,3 +1838,5 @@ describe("Support Functions", function () {
         
     // })
 })
+
+

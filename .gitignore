@@ -3,6 +3,11 @@ node_modules
 coverage
 coverage.json
 typechain
+.prettierignore
+.prettierrc
+.solhint.json
+.solhintignore
+.gas-report.txt
 
 #Hardhat files
 cache

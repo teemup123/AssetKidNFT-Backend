@@ -1677,7 +1677,7 @@ describe("Support Functions", function () {
 
         await galleryContract
             .connect(creator)
-            .commercializeCollectionId(2, initAmt, initPrice)
+            .commercializeCollectionId(2, initAmt, initPrice, false)
 
         // NFT is transferred to escrow
         tokenBal = await assetKidNftContract
@@ -1708,7 +1708,7 @@ describe("Support Functions", function () {
 
         await galleryContract
             .connect(creator)
-            .commercializeCollectionId(2, initAmt, initPrice)
+            .commercializeCollectionId(2, initAmt, initPrice, false)
 
         contractStatus = await escrowContract
             .connect(creator)
@@ -1724,7 +1724,7 @@ describe("Support Functions", function () {
 
         await galleryContract
             .connect(creator)
-            .commercializeCollectionId(2, initAmt, initPrice)
+            .commercializeCollectionId(2, initAmt, initPrice, false)
 
         supportAmt =2
 
@@ -1751,7 +1751,7 @@ describe("Support Functions", function () {
 
         await galleryContract
             .connect(creator)
-            .commercializeCollectionId(2, initAmt, initPrice)
+            .commercializeCollectionId(2, initAmt, initPrice, false)
 
         supportAmt =2
         await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
@@ -1784,7 +1784,7 @@ describe("Support Functions", function () {
 
         await galleryContract
             .connect(creator)
-            .commercializeCollectionId(2, initAmt, initPrice)
+            .commercializeCollectionId(2, initAmt, initPrice, false)
 
         supportAmt =2
         await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
@@ -1817,13 +1817,13 @@ describe("Support Functions", function () {
         
     })
 
-    it("Collector withdraw support: BIA transfer back to creator", async function (){
+    it("Collector withdraw support: BIA transfer back to collector", async function (){
         initAmt = 50
         initPrice = 100
 
         await galleryContract
             .connect(creator)
-            .commercializeCollectionId(2, initAmt, initPrice)
+            .commercializeCollectionId(2, initAmt, initPrice, false)
 
         supportAmt =2
         await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
@@ -1840,7 +1840,7 @@ describe("Support Functions", function () {
 
         await galleryContract
             .connect(creator)
-            .commercializeCollectionId(2, initAmt, initPrice)
+            .commercializeCollectionId(2, initAmt, initPrice, false)
 
         supportAmt =2
         await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
@@ -1854,6 +1854,147 @@ describe("Support Functions", function () {
         supportInfo = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
         assert.equal(supportInfo[0], 0)
         assert.equal(supportInfo[1], 0)
+
+    })
+
+    it("Creator cancel collection: SFT transfer back to creator, BIA available to withdraw", async function (){
+        initAmt = 50
+        initPrice = 100
+
+        await galleryContract
+            .connect(creator)
+            .commercializeCollectionId(2, initAmt, initPrice, false)
+        
+        creatorSftBal = await assetKidNftContract.balanceOf(creator.address, "2")
+        assert.equal(creatorSftBal, 50)
+
+        supportAmt =2
+        await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
+
+        await galleryContract
+            .connect(creator)
+            .commercializeCollectionId(2, 0, 0, true)
+        
+        creatorSftBal = await assetKidNftContract.connect(owner).balanceOf(creator.address, "2")
+        assert.equal(creatorSftBal, 100)
+        // console.log(creatorSftBal)
+
+        escrowBiaBal = await assetKidNftContract.connect(owner).balanceOf(escrowContract.address, "0")
+        // console.log(escrowBiaBal)
+        assert.equal(escrowBiaBal, supportAmt * initPrice)
+
+    })
+
+    it("Creator cancel collection: SFT transfer back to creator, collector1 withdraw, recorded properly", async function (){
+        
+        initAmt = 50
+        initPrice = 100
+
+        await galleryContract
+            .connect(creator)
+            .commercializeCollectionId(2, initAmt, initPrice, false)
+        
+        creatorSftBal = await assetKidNftContract.balanceOf(creator.address, "2")
+        assert.equal(creatorSftBal, 50)
+
+        supportAmt =2
+        await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
+        collector1BIA = await assetKidNftContract.balanceOf(collector1.address, "0")
+        // console.log(collector1BIA)
+
+        supportInfo = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
+        assert.equal(supportInfo[1], supportAmt)
+        //assert.equal(supportInfo[1], supportAmt)
+
+
+        //Creator Cancelling. 
+
+        await galleryContract
+            .connect(creator)
+            .commercializeCollectionId(2, 0, 0, true)
+
+        // Collevtor Claiming SFT
+        
+        await galleryContract.connect(collector1).claimSFT(2)
+        collector1BIA = await assetKidNftContract.balanceOf(collector1.address, "0")
+
+        supportInfo = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
+        assert.equal(supportInfo[1], 0)
+        
+
+    })
+
+    it("Creator cancel collection: SFT transfer back to creator, collector1 withdraw, transferred properly", async function (){
+        
+        initAmt = 50
+        initPrice = 100
+
+        await galleryContract
+            .connect(creator)
+            .commercializeCollectionId(2, initAmt, initPrice, false)
+        
+        creatorSftBal = await assetKidNftContract.balanceOf(creator.address, "2")
+        assert.equal(creatorSftBal, 50)
+
+        // Collector 1 BIA = 1000
+        collector1BIA = await assetKidNftContract.balanceOf(collector1.address, "0")
+        assert.equal(collector1BIA, 1000 )
+
+        supportInfo  = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
+        constractStat = await escrowContract.connect(collector1).getContractStatus()
+        // console.log(`pre support Contract ${constractStat}`)
+        // console.log(`pre support ${supportInfo}`)
+        // console.log(`pre support BIA ${collector1BIA}`)
+
+        supportAmt =2
+        await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
+        collector1BIA = await assetKidNftContract.balanceOf(collector1.address, "0")
+        supportInfo  = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
+        constractStat = await escrowContract.connect(collector1).getContractStatus()
+        // console.log(`post support Contract ${constractStat}`)
+        // console.log(`post support ${supportInfo}`)
+        // console.log(`post support BIA ${collector1BIA}`)
+
+
+        // Collector 1 BIA = 1000 - 2*100 = 800
+        assert.equal(collector1BIA, 1000 - supportAmt*initPrice )
+        //assert.equal(supportInfo[1], supportAmt)
+
+        //Pre-Cancelling
+        supportInfo  = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
+        collector1BIA = await assetKidNftContract.balanceOf(collector1.address, "0")
+        constractStat = await escrowContract.connect(collector1).getContractStatus()
+        // console.log(`pre cancelling | Contract ${constractStat}`)
+        // console.log(`pre cancelling | Info ${supportInfo}`)
+        // console.log(`pre cancelling | BIA ${collector1BIA}`)
+        //Creator Cancelling. 
+
+        await galleryContract
+            .connect(creator)
+            .commercializeCollectionId(2, 0, 0, true)
+
+        supportInfo  = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
+        collector1BIA = await assetKidNftContract.balanceOf(collector1.address, "0")
+        constractStat = await escrowContract.connect(collector1).getContractStatus()
+        // console.log(`post cancelling | Contract ${constractStat}`)
+        // console.log(`post cancelling | Info ${supportInfo}`)
+        // console.log(`post cancelling | BIA ${collector1BIA}`)
+
+        // Collector Claiming SFT
+        
+        await galleryContract.connect(collector1).claimSFT(2)
+
+        supportInfo  = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
+        collector1BIA = await assetKidNftContract.balanceOf(collector1.address, "0")
+        constractStat = await escrowContract.connect(collector1).getContractStatus()
+        // console.log(`post claiming | Contract ${constractStat}`)
+        // console.log(`post claiming | Info ${supportInfo}`)
+        // console.log(`post claiming | BIA ${collector1BIA}`)
+        
+        // Its not back to 1000.
+        collector1BIA = await assetKidNftContract.balanceOf(collector1.address, "0")
+        assert.equal(collector1BIA, 1000 )
+        
 
     })
 

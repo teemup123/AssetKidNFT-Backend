@@ -236,6 +236,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
                 ); // this [inside may not work] works.
                 // this is 200.
                 // Cannot be called when 0th address is inputted. THIS ONLY HAS TO BE CALLED ONCE
+                
             }
         }
 
@@ -249,9 +250,8 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             );
         }
 
-        address2UnapprovedCollection[creatorAddress] -= 1;
-
         // Approving the collection Id ONCE.
+        address2UnapprovedCollection[creatorAddress] -= 1;
         collectionId2galleryApproval[
             tokenId2CollectionId[otherTokenIds[0]]
         ] = true;
@@ -259,20 +259,27 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
 
     function claimSFT(uint256 tokenId) public {
         EscrowContract escrow_contract = getEscrowContract(tokenId);
-        (uint8 collectionState, , , ) = escrow_contract.getContractStatus();
-        if (collectionState != 3) {
+        (uint8 collectionState, , uint256 collectionPrice , ) = escrow_contract.getContractStatus();
+        // collection state 3 = verified : collector calling will be transferred sft
+        // colelction state 2 = SUPPORT-Cancelled : collector calling will be refunded NFT that is owed
+        if (collectionState == 0 || collectionState == 1) {
             revert GalleryContract__CollectionIdNotApproved();
         }
+        bool verifiedState = (collectionState == uint8(3)) ? true : false;
         (, uint256 sftOwed) = escrow_contract.getYourSupportInfo(msg.sender);
+
+        // it is not transfering the bia back to collector 
+
         NFT_CONTRACT.safeTransferFrom(
             address(escrow_contract),
             msg.sender,
-            tokenId,
-            sftOwed,
+            verifiedState ? tokenId : 0,
+            verifiedState ? sftOwed : sftOwed * collectionPrice, 
             ""
         );
 
         escrow_contract.claimedSupport(msg.sender);
+        // cancel functions
     }
 
     function supportCollectionId(uint256 tokenId, uint256 sftAmount) public {
@@ -318,7 +325,8 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     function commercializeCollectionId(
         uint256 tokenId,
         uint256 amount,
-        uint256 price
+        uint256 price,
+        bool cancel
     ) public {
         if (
             msg.sender !=
@@ -328,17 +336,17 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         }
 
         EscrowContract escrow_contract = getEscrowContract(tokenId);
-        //transfer the sft to the escrow contract
+        //transfer the sft to the escrow contract (cancel: transfer the sft back to creator)
         NFT_CONTRACT.safeTransferFrom(
-            msg.sender,
-            address(escrow_contract),
+            cancel ? address(escrow_contract) : msg.sender,
+            cancel ? msg.sender : address(escrow_contract),
             tokenId,
-            amount,
+            cancel ? NFT_CONTRACT.balanceOf(address(escrow_contract), tokenId) :  amount,
             ""
         );
 
         //record in escrow
-        escrow_contract.commercialize(msg.sender, amount, price);
+        escrow_contract.commercialize(msg.sender, amount, price, cancel);
     }
 
     function createSimpleCollectable(
@@ -862,16 +870,6 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         returns (uint256)
     {
         return (NFT_CONTRACT.balanceOf(_address, tokenId));
-    }
-
-    function getLowestOffer(uint256 _tokenId)
-        public
-        view
-        returns (uint8 lowest_ask_index, bool found_lowest_ask)
-    {
-        EscrowContract escrow_contract = getEscrowContract(_tokenId);
-        (lowest_ask_index, found_lowest_ask) = escrow_contract.findLowestAsk();
-        return (lowest_ask_index, found_lowest_ask);
     }
 
     function getExchangeRate(uint256 _tokenIdSubmit, uint256 _tokenIdExchange)

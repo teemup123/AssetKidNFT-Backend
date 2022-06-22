@@ -19,7 +19,7 @@ contract EscrowContract is ERC1155Holder, Ownable {
     uint256 public SUPPORT_PRICE;
     uint256 public SUPPORT_AMOUNT;
 
-    enum ContractState{
+    enum ContractState {
         UNVERIFIED, // when the contract is created
         SEEKING_SUPPORT,
         SUPPORT_CANCELLED, // when the creator cancel the support
@@ -57,7 +57,6 @@ contract EscrowContract is ERC1155Holder, Ownable {
 
     ContractState contractState;
 
-
     constructor(
         address _nftAddress,
         uint256 _nativeTokenId,
@@ -71,32 +70,41 @@ contract EscrowContract is ERC1155Holder, Ownable {
         contractState = ContractState.UNVERIFIED;
     }
 
-    function commercialize(address creatorAddress, uint256 amount, uint256 price) public onlyOwner {
-        if (!COMMERCIALIZABLE || amount * price < 5000) {
+    function commercialize(
+        address creatorAddress,
+        uint256 amount,
+        uint256 price,
+        bool cancel
+    ) public onlyOwner {
+        
+        if ((!COMMERCIALIZABLE && !cancel) || amount * price < 5000 && !cancel) {
             // Make sure it is the commercial tier token of the collection and amount * price exceeds 5000 BIA.
             revert EscrowContract__CannotCommercialize();
         }
 
-        contractState = ContractState.SEEKING_SUPPORT;
+        contractState = cancel
+            ? ContractState.SUPPORT_CANCELLED
+            : ContractState.SEEKING_SUPPORT;
         COMMERCIALIZABLE = false;
-        SUPPORT_PRICE = price;
-        // need to log creator address to support bia. 
-        address2BiaOwed[creatorAddress] = amount * SUPPORT_PRICE;
+        SUPPORT_PRICE = cancel ? SUPPORT_PRICE : price;
+        // need to log creator address to support bia.
+        address2BiaOwed[creatorAddress] = cancel ? 0 : amount * SUPPORT_PRICE;
         CREATOR_ADDRESS = creatorAddress;
-
     }
 
-    function support(address supporterAddress, uint256 amount, bool cancel) // sftAmount that user supports
-        public
-        onlyOwner
-    {
+    function support(
+        address supporterAddress,
+        uint256 amount,
+        bool cancel // sftAmount that user supports
+    ) public onlyOwner {
         if (contractState != ContractState.SEEKING_SUPPORT) {
             revert EscrowContract__CannotSupport();
         }
-        cancel ? address2SftAmtOwed[supporterAddress] = 0 : address2SftAmtOwed[supporterAddress] = amount;
+        cancel
+            ? address2SftAmtOwed[supporterAddress] = 0
+            : address2SftAmtOwed[supporterAddress] = amount;
         cancel ? SUPPORT_AMOUNT -= amount : SUPPORT_AMOUNT += amount; // sft SUPPORT_AMOUNT increases by the user submitted amount
         address2BiaOwed[CREATOR_ADDRESS] = SUPPORT_AMOUNT * SUPPORT_PRICE; // amount submit by collector x price set by creator.
-        
     }
 
     function recordBidAsk(
@@ -159,13 +167,18 @@ contract EscrowContract is ERC1155Holder, Ownable {
         }
     }
 
-    function check4Submission(address adr, bool bid) public view returns(bool proceed){
+    function check4Submission(address adr, bool bid)
+        public
+        view
+        returns (bool proceed)
+    {
         // if bid or ask already exist, revert
-        for (uint8 i=0; i<50;i++){
-            if (bid && bid_array[i].bidderAddress == adr ){
+        for (uint8 i = 0; i < 50; i++) {
+            if (bid && bid_array[i].bidderAddress == adr) {
+                revert EscrowContract__AlreadySubmit();
+            } else if (!bid && ask_array[i].askerAddress == adr) {
                 revert EscrowContract__AlreadySubmit();
             }
-            else if  (!bid && ask_array[i].askerAddress == adr ) {revert EscrowContract__AlreadySubmit();}
         }
 
         return true;
@@ -189,14 +202,17 @@ contract EscrowContract is ERC1155Holder, Ownable {
         );
     }
 
-    function getYourSupportInfo(address claimer) public view returns(uint256 biaSupported, uint256 sftOwed){
+    function getYourSupportInfo(address claimer)
+        public
+        view
+        returns (uint256 biaSupported, uint256 sftOwed)
+    {
         return (address2BiaOwed[claimer], address2SftAmtOwed[claimer]);
     }
 
     function claimedSupport(address claimer) external onlyOwner {
         address2BiaOwed[claimer] = 0;
         address2SftAmtOwed[claimer] = 0;
-
     }
 
     // CALL THIS FUNCTION BEFORE RECORD BID/ RECORD ASk
@@ -299,7 +315,6 @@ contract EscrowContract is ERC1155Holder, Ownable {
             uint256 ask_replacement_amt
         )
     {
-        
         uint256 highest_ask_price = 0;
 
         for (uint8 i; i < 50; i++) {

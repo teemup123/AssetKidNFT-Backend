@@ -15,11 +15,16 @@ error EscrowContract__AlreadySubmit();
 contract EscrowContract is ERC1155Holder, Ownable {
     // This contract will facillitate the trade of a specific tokenId token belonging to the AssetKidNft collection
 
-    bool public COLLECTION_STATE; // is this collection verified by the gallery
     bool public COMMERCIALIZABLE; // whether this escrow is baseTier or maxQuant token or not available for support
-    bool public SUPPORT_STATE; // Is creator seeking support
     uint256 public SUPPORT_PRICE;
     uint256 public SUPPORT_AMOUNT;
+
+    enum ContractState{
+        UNVERIFIED, // when the contract is created
+        SEEKING_SUPPORT,
+        SUPPORT_CANCELLED, // when the creator cancel the support
+        VERIFIED
+    }
 
     mapping(address => uint256) public address2BiaOwed;
     mapping(address => uint256) public address2SftAmtOwed;
@@ -39,7 +44,7 @@ contract EscrowContract is ERC1155Holder, Ownable {
     }
 
     modifier verifiedCollection() {
-        if (!COLLECTION_STATE) {
+        if (contractState != ContractState.VERIFIED) {
             revert EscrowContract__ContractLocked();
         }
         _;
@@ -48,8 +53,10 @@ contract EscrowContract is ERC1155Holder, Ownable {
     Bid[50] bid_array; //highest bid will be stored in the 49th place
     Ask[50] ask_array; //lowest ask
     uint256 immutable tokenId;
-    bool immutable commercialTier;
     address CREATOR_ADDRESS;
+
+    ContractState contractState;
+
 
     constructor(
         address _nftAddress,
@@ -60,8 +67,8 @@ contract EscrowContract is ERC1155Holder, Ownable {
         AssetKidNFT nft_contract = AssetKidNFT(collectionAddress);
         nft_contract.setApproval4Gallery(); // when created, this contract will approve gallery to manage their tokens.
         tokenId = _nativeTokenId;
-        commercialTier = _commercialTier;
         COMMERCIALIZABLE = _commercialTier ? true : false;
+        contractState = ContractState.UNVERIFIED;
     }
 
     function commercialize(address creatorAddress, uint256 amount, uint256 price) public onlyOwner {
@@ -70,7 +77,7 @@ contract EscrowContract is ERC1155Holder, Ownable {
             revert EscrowContract__CannotCommercialize();
         }
 
-        SUPPORT_STATE = true;
+        contractState = ContractState.SEEKING_SUPPORT;
         COMMERCIALIZABLE = false;
         SUPPORT_PRICE = price;
         // need to log creator address to support bia. 
@@ -83,7 +90,7 @@ contract EscrowContract is ERC1155Holder, Ownable {
         public
         onlyOwner
     {
-        if (!SUPPORT_STATE) {
+        if (contractState != ContractState.SEEKING_SUPPORT) {
             revert EscrowContract__CannotSupport();
         }
         cancel ? address2SftAmtOwed[supporterAddress] = 0 : address2SftAmtOwed[supporterAddress] = amount;
@@ -168,17 +175,15 @@ contract EscrowContract is ERC1155Holder, Ownable {
         public
         view
         returns (
-            bool,
-            bool,
+            uint8,
             bool,
             uint256,
             uint256
         )
     {
         return (
-            COLLECTION_STATE,
+            uint8(contractState),
             COMMERCIALIZABLE,
-            SUPPORT_STATE,
             SUPPORT_PRICE,
             SUPPORT_AMOUNT
         );
@@ -425,8 +430,7 @@ contract EscrowContract is ERC1155Holder, Ownable {
     }
 
     function verifyCollection() external onlyOwner {
-        COLLECTION_STATE = true;
-        SUPPORT_STATE = false;
+        contractState = ContractState.VERIFIED;
         COMMERCIALIZABLE = false;
     }
 }

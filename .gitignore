@@ -7,7 +7,7 @@ typechain
 .prettierrc
 .solhint.json
 .solhintignore
-.gas-report.txt
+gas-report.txt
 
 #Hardhat files
 cache

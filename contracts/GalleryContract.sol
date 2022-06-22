@@ -259,8 +259,8 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
 
     function claimSFT(uint256 tokenId) public {
         EscrowContract escrow_contract = getEscrowContract(tokenId);
-        (bool collectionState, , , , ) = escrow_contract.getContractStatus();
-        if (!collectionState) {
+        (uint8 collectionState, , , ) = escrow_contract.getContractStatus();
+        if (collectionState != 3) {
             revert GalleryContract__CollectionIdNotApproved();
         }
         (, uint256 sftOwed) = escrow_contract.getYourSupportInfo(msg.sender);
@@ -283,7 +283,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             revert GalleryContract__NotCollector();
         }
         EscrowContract escrow_contract = getEscrowContract(tokenId);
-        (, , , uint256 price, ) = escrow_contract.getContractStatus(); // price set by the creator
+        (, , uint256 price, ) = escrow_contract.getContractStatus(); // price set by the creator
         uint256 biaAmount = price * sftAmount; // amount BIA to transfer = price set by creator * sftAmount support
         NFT_CONTRACT.safeTransferFrom(
             msg.sender,
@@ -302,7 +302,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             revert GalleryContract__NotCollector();
         }
         // transfer nft back
-        (, , , uint256 price, ) = escrow_contract.getContractStatus();
+        (, , uint256 price, ) = escrow_contract.getContractStatus();
         uint256 biaOwed = sftOwed * price;
         NFT_CONTRACT.safeTransferFrom(
             address(escrow_contract),

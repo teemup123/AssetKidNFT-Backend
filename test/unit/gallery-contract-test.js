@@ -1699,8 +1699,12 @@ describe("Support Functions", function () {
             .connect(creator)
             .getContractStatus()
 
+        
+        // collectionState 0 = UNVERIFIED
+        // COMMERCIALIZATION = true
+
+        assert.equal(contractStatus[0], 0)
         assert.equal(contractStatus[1], true)
-        assert.equal(contractStatus[2], false)
 
         await galleryContract
             .connect(creator)
@@ -1710,8 +1714,8 @@ describe("Support Functions", function () {
             .connect(creator)
             .getContractStatus()
 
+        assert.equal(contractStatus[0], 1)
         assert.equal(contractStatus[1], false)
-        assert.equal(contractStatus[2], true)
     })
 
     it("Collector support project: escrow receive and record", async function () {

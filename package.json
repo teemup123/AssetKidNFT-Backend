@@ -22,5 +22,20 @@
     "prettier-plugin-solidity": "^1.0.0-beta.13",
     "solhint": "^3.3.6",
     "solidity-coverage": "^0.7.16"
-  }
+  },
+  "name": "hardhat-assetkid-gallery",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Get started using web3.storage in Node.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "minimist": "^1.2.5",
+    "multiformats": "https://github.com/multiformats/js-multiformats.git",
+    "web3.storage": "^4.2.0"
+  },
+  "author": "Dean Tan",
+  "license": "(Apache-2.0 AND MIT)"
 }

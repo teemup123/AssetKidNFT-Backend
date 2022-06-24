@@ -218,24 +218,6 @@ contract EscrowContract is ERC1155Holder, Ownable {
 
     // CALL THIS FUNCTION BEFORE RECORD BID/ RECORD ASk
 
-    function findHighestBid()
-        public
-        view
-        verifiedCollection
-        returns (uint8 _index, bool _submissionExists)
-    {
-        uint256 highest_bid = 0;
-        for (uint8 i; i < 50; i++) {
-            if (bid_array[i].active && bid_array[i].bidPrice > highest_bid) {
-                highest_bid = bid_array[i].bidPrice;
-                _index = i;
-                _submissionExists = true;
-            }
-        }
-
-        return (_index, _submissionExists);
-    }
-
     function findIndex(
         address adr,
         uint256 submitPrice,
@@ -309,20 +291,22 @@ contract EscrowContract is ERC1155Holder, Ownable {
 
         return (index, found, replacement, replacement_address, refund_amt);
     }
-
-    function findLowestAsk()
+    
+    function findHighestBidLowestAsk(bool bid)
         public
         view
         verifiedCollection
         returns (uint8 _index, bool _submissionExists)
     {
-        uint256 lowest_ask = (2**256 - 1);
-        _submissionExists = false;
-        _index = 0;
+        uint256 ref_price = bid ? 0 : (2**256 - 1);
 
         for (uint8 i; i < 50; i++) {
-            if (ask_array[i].active && ask_array[i].askPrice < lowest_ask) {
-                lowest_ask = ask_array[i].askPrice;
+            if (
+                bid
+                    ? (bid_array[i].active && bid_array[i].bidPrice > ref_price)
+                    : (ask_array[i].active && ask_array[i].askPrice < ref_price)
+            ) {
+                ref_price = bid ? bid_array[i].bidPrice : ask_array[i].askPrice;
                 _index = i;
                 _submissionExists = true;
             }

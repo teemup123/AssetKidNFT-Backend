@@ -744,10 +744,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     {
         // thid function finds lowest ask and highest bid then returns the information
         EscrowContract escrow_contract = getEscrowContract(tokenId);
-
-        (counterIndex, counterFound) = bid
-            ? escrow_contract.findLowestAsk()
-            : escrow_contract.findHighestBid();
+        (counterIndex, counterFound) = escrow_contract.findHighestBidLowestAsk(bid ? false : true);
         if (counterFound) {
             (counterAddress, counterPrice, counterAmount, ) = bid
                 ? escrow_contract.getAskArrayInfo(counterIndex)

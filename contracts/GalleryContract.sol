@@ -608,19 +608,17 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
                 address(escrow_contract) // escrow contract
             );
 
+            escrow_contract.reconcileAmount(
+                (counterAmount > amount) ? counterAmount - amount : 0,
+                counterIndex,
+                bid
+            );
+
             if (counterAmount > amount) {
-                // if amount is less than counterAmount, already transfer, just reconcile
-                uint256 newCounterAmt = counterAmount - amount;
-                escrow_contract.reconcileAmount(
-                    newCounterAmt,
-                    counterIndex,
-                    bid
-                );
                 break;
+            } else {
+                amount -= counterAmount;
             }
-            // amount more than counterAtmount, reconcile 0 for counterAmt
-            escrow_contract.reconcileAmount(0, counterIndex, bid);
-            amount -= counterAmount;
         }
     }
 
@@ -697,7 +695,8 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         bool cancel,
         uint8 cancelIndex,
         bool bid
-    ) internal { // pretty sure this can be moved to NFT contract
+    ) internal {
+        // pretty sure this can be moved to NFT contract
         EscrowContract escrow_contract = getEscrowContract(_tokenId);
 
         (
@@ -757,7 +756,8 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             bid ? false : true
         );
         if (counterFound) {
-            (counterAddress, counterPrice, counterAmount, ) = escrow_contract.getArrayInfo(counterIndex, bid ? false : true);
+            (counterAddress, counterPrice, counterAmount, ) = escrow_contract
+                .getArrayInfo(counterIndex, bid ? false : true);
         }
 
         return (

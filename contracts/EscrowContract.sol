@@ -52,7 +52,7 @@ contract EscrowContract is ERC1155Holder, Ownable {
 
     Bid[50] bid_array; //highest bid will be stored in the 49th place
     Ask[50] ask_array; //lowest ask
-    uint256 immutable tokenId;
+    uint256 immutable galleryTokenId; // numerical.
     address CREATOR_ADDRESS;
 
     ContractState contractState;
@@ -65,7 +65,7 @@ contract EscrowContract is ERC1155Holder, Ownable {
         address collectionAddress = _nftAddress;
         AssetKidNFT nft_contract = AssetKidNFT(collectionAddress);
         nft_contract.setApproval4Gallery(); // when created, this contract will approve gallery to manage their tokens.
-        tokenId = _nativeTokenId;
+        galleryTokenId = _nativeTokenId;
         COMMERCIALIZABLE = _commercialTier ? true : false;
         contractState = ContractState.UNVERIFIED;
     }
@@ -76,8 +76,9 @@ contract EscrowContract is ERC1155Holder, Ownable {
         uint256 price,
         bool cancel
     ) public onlyOwner {
-        
-        if ((!COMMERCIALIZABLE && !cancel) || amount * price < 5000 && !cancel) {
+        if (
+            (!COMMERCIALIZABLE && !cancel) || (amount * price < 5000 && !cancel)
+        ) {
             // Make sure it is the commercial tier token of the collection and amount * price exceeds 5000 BIA.
             revert EscrowContract__CannotCommercialize();
         }
@@ -387,24 +388,20 @@ contract EscrowContract is ERC1155Holder, Ownable {
 
     //
 
-    function reconcileAsk(uint256 _newAskAmt, uint8 _index)
-        external
-        onlyOwner
-        verifiedCollection
-    {
-        if (_newAskAmt == 0) {
-            ask_array[_index].active = false;
-        } else (ask_array[_index].askAmount = _newAskAmt);
-    }
-
-    function reconcileBid(uint256 _newBidAmt, uint8 _index)
-        external
-        onlyOwner
-        verifiedCollection
-    {
-        if (_newBidAmt == 0) {
-            bid_array[_index].active = false;
-        } else (bid_array[_index].bidAmount = _newBidAmt);
+    function reconcileAmount(
+        uint256 _newAmt,
+        uint8 _index,
+        bool bid
+    ) external onlyOwner verifiedCollection {
+        if (_newAmt == 0) {
+            bid
+                ? bid_array[_index].active = false
+                : ask_array[_index].active = false;
+        } else {
+            bid
+                ? bid_array[_index].bidAmount = _newAmt
+                : ask_array[_index].askAmount = _newAmt;
+        }
     }
 
     //

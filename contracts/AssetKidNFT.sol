@@ -7,9 +7,18 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./GalleryContract.sol";
 
+// Procedure for uploading token meta uri:
+// 1. Upload image or gif (.png) [IF ANY] [Name it consistantly]
+// 2. Construct metadata.json with the link to the uploaded image/gif
+// 3. Use Web3.storage to host your metadata.
+// 4. Grab the hex version of ur CID (IPFS Command Lines or Package)
+// 5. Use 0x<hex> as the tokenId
+// 6. Map it to gallery tokenId <-- this mapping has to be done within the gallery contract.
+
 contract AssetKidNFT is ERC1155, Ownable, ReentrancyGuard {
     address gallery_contract_address;
-    uint256 public constant BIA = 0;
+    uint256 public constant BIA =
+        0x9be311107159657ffe70682e3b33dcaf994ed60bb0afd954dbdd8afa12f139e5;
     uint256 public constant FriendsAndFam = 1;
 
     constructor(address _galleryAddress) ERC1155("") ReentrancyGuard() {
@@ -24,7 +33,7 @@ contract AssetKidNFT is ERC1155, Ownable, ReentrancyGuard {
 
     function mintToken(
         address _addressMintTo,
-        uint256 _tokenId,
+        uint256 _tokenId, // Should be HEX
         uint16 _quantity
     ) external onlyOwner {
         _mint(_addressMintTo, _tokenId, _quantity, "");
@@ -54,7 +63,6 @@ contract AssetKidNFT is ERC1155, Ownable, ReentrancyGuard {
         bool bid,
         address escrow_address
     ) public onlyOwner {
-        
         // This function pays the record side
         // bid ?    bidder transfer BIA to asker @ _tokenAmt * _askPrice
         //          asker trasnfer SFT to bidder @ _tokenAmt
@@ -65,7 +73,6 @@ contract AssetKidNFT is ERC1155, Ownable, ReentrancyGuard {
             bid ? _tokenAmt * _askPrice : _tokenAmt,
             ""
         );
-
 
         // bid? transfer SFT from escrow to bidder : transfer BIA from escrow to asker
         // this functions pays the escrow side (bid or ask)
@@ -126,5 +133,65 @@ contract AssetKidNFT is ERC1155, Ownable, ReentrancyGuard {
                 ""
             );
         }
+    }
+
+    function uint2hexstr(uint256 i) public pure returns (string memory) {
+        if (i == 0) return "0";
+        uint256 j = i;
+        uint256 length;
+        while (j != 0) {
+            length++;
+            j = j >> 4;
+        }
+        uint256 mask = 15;
+        bytes memory bstr = new bytes(length);
+        uint256 k = length;
+        while (i != 0) {
+            uint256 curr = (i & mask);
+            bstr[--k] = curr > 9
+                ? bytes1(uint8(55 + curr))
+                : bytes1(uint8(48 + curr)); // 55 = 65 - 10
+            i = i >> 4;
+        }
+        return string(bstr);
+    }
+
+    function uri(uint256 _tokenID)
+        public
+        pure
+        override
+        returns (string memory)
+    {
+        string memory hexstringtokenID;
+        hexstringtokenID = uint2hexstr(_tokenID);
+
+        return string(abi.encodePacked("ipfs://f01701220", hexstringtokenID));
+    }
+
+    function exchangeTierTokens(
+        address caller,
+        address assemblerContractAddress,
+        uint256 hexTokenIdSubmit,
+        uint16 tokenIdSubmitAmt,
+        uint16 exchangeToSubmit,
+        uint256 hexTokenIdExchange,
+        uint256 amtMultiplier
+    ) external onlyOwner{ // here tokenId must follow HEX.
+        safeTransferFrom(
+            caller,
+            assemblerContractAddress,
+            hexTokenIdSubmit,
+            tokenIdSubmitAmt,
+            ""
+        );
+
+        safeTransferFrom(
+            assemblerContractAddress,
+            caller,
+            hexTokenIdExchange,
+            exchangeToSubmit * amtMultiplier,
+            ""
+        );
+
     }
 }

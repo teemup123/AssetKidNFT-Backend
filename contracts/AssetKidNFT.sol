@@ -45,12 +45,12 @@ contract AssetKidNFT is ERC1155, Ownable, ReentrancyGuard {
     }
 
     function mutualEscrowTransfer(
-        address bidderAddress,
-        address askerAddress,
-        uint256 _tokenId,
-        uint256 _tokenAmt,
-        uint256 _askPrice,
-        uint256 _bidPrice,
+        address sender,
+        address counterParty,
+        uint256 tokenId,
+        uint256 amount,
+        uint256 askPrice,
+        uint256 bidPrice,
         bool bid,
         address escrow_address
     ) public onlyOwner {
@@ -58,11 +58,14 @@ contract AssetKidNFT is ERC1155, Ownable, ReentrancyGuard {
         // This function pays the record side
         // bid ?    bidder transfer BIA to asker @ _tokenAmt * _askPrice
         //          asker trasnfer SFT to bidder @ _tokenAmt
+        // Transfer from sender to counter party. 
+        // bid ?    sender:bidder ; counterParty:asker
+        //          sender:asker ; counterParty:bidder
         safeTransferFrom(
-            bid ? bidderAddress : askerAddress, // from bidder ->asker
-            bid ? askerAddress : bidderAddress,
-            bid ? 0 : _tokenId,
-            bid ? _tokenAmt * _askPrice : _tokenAmt,
+            sender,
+            counterParty,
+            bid ? BIA : tokenId,
+            bid ? amount * askPrice : amount,
             ""
         );
 
@@ -71,23 +74,24 @@ contract AssetKidNFT is ERC1155, Ownable, ReentrancyGuard {
         // this functions pays the escrow side (bid or ask)
         // bid ?    escrow transfer SFT to bidder @ _tokenAmt
         //          escrow transfer BIA to asker @ _tokenAmt * _askPrice
+        // Transfer from escrow to sender.
         safeTransferFrom(
             escrow_address,
-            bid ? bidderAddress : askerAddress,
-            bid ? _tokenId : 0,
-            bid ? _tokenAmt : _tokenAmt * _askPrice,
+            sender,
+            bid ? tokenId : BIA,
+            bid ? amount : amount * askPrice,
             ""
         );
 
         // If price is different, gallery contract does abitrage
         // bid ?    bidder transfer BIA to gallery @  _tokenAmt * (_bidPrice - _askPrice)
         //          escrow transfer BIA to gallery @ _tokenAmt * (_bidPrice - _askPrice)
-        if (_askPrice < _bidPrice) {
+        if (askPrice < bidPrice) {
             safeTransferFrom(
-                bid ? bidderAddress : escrow_address,
+                bid ? sender : escrow_address,
                 gallery_contract_address,
-                0,
-                _tokenAmt * (_bidPrice - _askPrice),
+                BIA,
+                amount * (bidPrice - askPrice),
                 ""
             );
         }

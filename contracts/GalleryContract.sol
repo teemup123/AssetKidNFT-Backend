@@ -553,6 +553,41 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         );
     }
 
+    function submitOfferHelper(
+        address sender,
+        uint256 tokenId,
+        uint256 amount,
+        uint256 price,
+        bool bid
+    ) internal {
+        (
+            uint8 counterIndex,
+            address counterAddress,
+            uint256 counterPrice,
+            uint256 counterAmount,
+
+        ) = getCounterPartyInfo(bid, tokenId);
+
+        EscrowContract escrow_contract = getEscrowContract(tokenId);
+
+        NFT_CONTRACT.mutualEscrowTransfer(
+            sender, // sender
+            counterAddress, // counterParty
+            tokenId, // tokenId
+            (counterAmount >= amount) ? amount : counterAmount, // tokenAmount
+            bid ? counterPrice : price, // askingPrice
+            bid ? price : counterPrice, // bidingPrice
+            bid, // bid or ask input
+            address(escrow_contract) // escrow contract
+        );
+
+        escrow_contract.reconcileAmount(
+            (counterAmount > amount) ? counterAmount - amount : 0,
+            counterIndex,
+            bid
+        );
+    }
+
     function submitOffer(
         uint256 tokenId,
         uint256 amount,
@@ -560,16 +595,14 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         bool bid
     ) public onlyVerified(tokenId2CollectionId[tokenId]) {
         // This is required because STACK TOO DEEP error.
-        EscrowContract escrow_contract = getEscrowContract(tokenId);
+        
         // Check for previous submission ?
-        if (!escrow_contract.check4Submission(msg.sender, bid)) {
-            return;
-        }
+       
         while (amount > 0) {
             // get counter party if available.
             (
-                uint8 counterIndex,
-                address counterAddress,
+                ,
+                ,
                 uint256 counterPrice,
                 uint256 counterAmount,
                 bool counterFound
@@ -588,31 +621,13 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
                     price, // _tokenPrice bidPrice / askPrice
                     false, // cancel
                     0, // cancelIndex
-                    bid ? true : false // bid
+                    bid // bid
                 );
 
                 break;
             }
 
-            // COUNTER PART AVAILABLE
-            // Transfer the smallest amt (amount vs counterAmount) to their respective owner
-            // Only run when askPrice > bidPrice.
-            NFT_CONTRACT.mutualEscrowTransfer(
-                bid ? msg.sender : counterAddress, // bidderAddress
-                bid ? counterAddress : msg.sender, // askerAddress
-                tokenId, // tokenId
-                (counterAmount >= amount) ? amount : counterAmount, // tokenAmount
-                bid ? counterPrice : price, // askingPrice
-                bid ? price : counterPrice, // bidingPrice
-                bid ? true : false, // bid or ask input
-                address(escrow_contract) // escrow contract
-            );
-
-            escrow_contract.reconcileAmount(
-                (counterAmount > amount) ? counterAmount - amount : 0,
-                counterIndex,
-                bid
-            );
+            submitOfferHelper(msg.sender, tokenId, amount, price, bid);
 
             if (counterAmount > amount) {
                 break;

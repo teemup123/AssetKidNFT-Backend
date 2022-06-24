@@ -609,15 +609,11 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             if (counterAmount > amount) {
                 // if amount is less than counterAmount, already transfer, just reconcile
                 uint256 newCounterAmt = counterAmount - amount;
-                bid
-                    ? escrow_contract.reconcileAsk(newCounterAmt, counterIndex)
-                    : escrow_contract.reconcileBid(newCounterAmt, counterIndex);
+                escrow_contract.reconcileAmount(newCounterAmt, counterIndex, bid);
                 break;
             }
             // amount more than counterAtmount, reconcile 0 for counterAmt
-            bid
-                ? escrow_contract.reconcileAsk(0, counterIndex)
-                : escrow_contract.reconcileBid(0, counterIndex);
+            escrow_contract.reconcileAmount(0, counterIndex, bid);
             amount -= counterAmount;
         }
     }

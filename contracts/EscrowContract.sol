@@ -76,8 +76,9 @@ contract EscrowContract is ERC1155Holder, Ownable {
         uint256 price,
         bool cancel
     ) public onlyOwner {
-        
-        if ((!COMMERCIALIZABLE && !cancel) || amount * price < 5000 && !cancel) {
+        if (
+            (!COMMERCIALIZABLE && !cancel) || (amount * price < 5000 && !cancel)
+        ) {
             // Make sure it is the commercial tier token of the collection and amount * price exceeds 5000 BIA.
             revert EscrowContract__CannotCommercialize();
         }
@@ -385,26 +386,20 @@ contract EscrowContract is ERC1155Holder, Ownable {
         return (_index, _submissionExists);
     }
 
-    //
-
-    function reconcileAsk(uint256 _newAskAmt, uint8 _index)
-        external
-        onlyOwner
-        verifiedCollection
-    {
-        if (_newAskAmt == 0) {
-            ask_array[_index].active = false;
-        } else (ask_array[_index].askAmount = _newAskAmt);
-    }
-
-    function reconcileBid(uint256 _newBidAmt, uint8 _index)
-        external
-        onlyOwner
-        verifiedCollection
-    {
-        if (_newBidAmt == 0) {
-            bid_array[_index].active = false;
-        } else (bid_array[_index].bidAmount = _newBidAmt);
+    function reconcileAmount(
+        uint256 _newAmt,
+        uint8 _index,
+        bool bid
+    ) external onlyOwner verifiedCollection {
+        if (_newAmt == 0) {
+            bid
+                ? ask_array[_index].active = false
+                : bid_array[_index].active = false;
+        } else {
+            bid
+                ? ask_array[_index].askAmount = _newAmt
+                : bid_array[_index].bidAmount = _newAmt;
+        }
     }
 
     //

@@ -85,10 +85,13 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     //Map address => operatorApproval
     mapping(address => bool) internal address2OperatorApproval;
 
+    // Mapping tokenId to tokenHex
+    mapping(uint256 => uint256) internal tokenId2Hex;
+
     // State Variables
 
     uint256 public collectionIdCounter = 0;
-    uint256 public tokenIdCounter = 0;
+    uint256 public TOKEN_ID_COUNTER = 0;
     address public immutable ASSET_KID_NFT_ADDRESS;
     AssetKidNFT public NFT_CONTRACT;
 
@@ -137,7 +140,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
 
         mapTokenIdsAndEscrow(
             collectionIdCounter,
-            tokenIdCounter,
+            0x9be311107159657ffe70682e3b33dcaf994ed60bb0afd954dbdd8afa12f139e5,
             address(0),
             uint16(1000)
         );
@@ -152,7 +155,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
 
         mapTokenIdsAndEscrow(
             collectionIdCounter,
-            tokenIdCounter,
+            0x204e2560e88f1d0a68fd87ad260c282b9ad7480d8dc1158c830f3b87cf1b404d,
             address(0),
             uint16(1000)
         );
@@ -185,12 +188,12 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     }
 
     function transferBetween(
-        address _from,
-        address _to,
-        uint256 _tokenId,
-        uint256 _amt
+        address from,
+        address to,
+        uint256 tokenId,
+        uint256 amount
     ) external onlyOwner {
-        NFT_CONTRACT.safeTransferFrom(_from, _to, _tokenId, _amt, "");
+        NFT_CONTRACT.safeTransferFrom(from, to, tokenId2Hex[tokenId], amount, "");
     }
 
     //// Public
@@ -243,7 +246,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             NFT_CONTRACT.safeTransferFrom(
                 address(escrowContract),
                 creatorAddress,
-                0,
+                tokenId2Hex[0],
                 biaSupported,
                 ""
             );
@@ -273,7 +276,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         NFT_CONTRACT.safeTransferFrom(
             address(escrow_contract),
             msg.sender,
-            verifiedState ? tokenId : 0,
+            verifiedState ? tokenId2Hex[tokenId] : tokenId2Hex[0],
             verifiedState ? sftOwed : sftOwed * collectionPrice,
             ""
         );
@@ -295,7 +298,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         NFT_CONTRACT.safeTransferFrom(
             msg.sender,
             address(escrow_contract),
-            0,
+            tokenId2Hex[0],
             biaAmount,
             ""
         );
@@ -314,7 +317,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         NFT_CONTRACT.safeTransferFrom(
             address(escrow_contract),
             msg.sender,
-            0,
+            tokenId2Hex[0],
             biaOwed,
             ""
         );
@@ -340,9 +343,9 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         NFT_CONTRACT.safeTransferFrom(
             cancel ? address(escrow_contract) : msg.sender,
             cancel ? msg.sender : address(escrow_contract),
-            tokenId,
+            tokenId2Hex[tokenId],
             cancel
-                ? NFT_CONTRACT.balanceOf(address(escrow_contract), tokenId)
+                ? NFT_CONTRACT.balanceOf(address(escrow_contract), tokenId2Hex[tokenId])
                 : amount,
             ""
         );
@@ -353,7 +356,8 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
 
     function createSimpleCollectable(
         uint16[10] memory _quantity,
-        uint16[10] memory _percentage
+        uint16[10] memory _percentage,
+        uint256[10] memory hexArray 
     ) public nonReentrant {
         if (address2UnapprovedCollection[msg.sender] >= 5)
             revert GalleryContract__TooManyUnapprovedCollection();
@@ -386,18 +390,18 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
                 address escrowContractAddress = DeployEscrowContract
                     .deployContract(
                         ASSET_KID_NFT_ADDRESS,
-                        tokenIdCounter,
+                        TOKEN_ID_COUNTER,
                         (i == maxQuantIndex) ? true : false
                     );
                 NFT_CONTRACT.mintToken(
                     msg.sender,
-                    tokenIdCounter,
+                    hexArray[i],
                     _quantity[i]
                 );
-                tokenIdArray[i] = tokenIdCounter;
+                tokenIdArray[i] = TOKEN_ID_COUNTER;
                 mapTokenIdsAndEscrow(
                     collectionIdCounter,
-                    tokenIdCounter,
+                    hexArray[i],
                     escrowContractAddress,
                     uint16(_percentage[i])
                 );
@@ -415,8 +419,9 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     }
 
     function createTierCollectable(
-        uint16 _baseTier,
-        uint16[10] memory _subsequentTier
+        uint16 _baseTier, 
+        uint16[10] memory _subsequentTier,
+        uint256[10] memory hexIdArray
     ) public nonReentrant {
         // the miniumum percentage is 0.1%
         // Variable -> 1 = 0.1%, 10 = 1%, 100 = 10%, 1000 = 100%.
@@ -462,19 +467,22 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
 
         uint16 baseQuantity = 1000 / _baseTier; // Should be fine because line 172
 
+        // create an escrow contract for the base tier
         address escrowContractAddress = DeployEscrowContract.deployContract(
             ASSET_KID_NFT_ADDRESS,
-            tokenIdCounter,
+            TOKEN_ID_COUNTER,
             true
-        ); //create an escrow contract for the base tier
-        NFT_CONTRACT.mintToken(creator, tokenIdCounter, baseQuantity);
+        ); 
+
+        // minting base tier token 
+        NFT_CONTRACT.mintToken(creator, hexIdArray[0], baseQuantity);
         address assemblerContractAddress = DeployAssemblerContract
             .deployContract(ASSET_KID_NFT_ADDRESS);
 
-        tokenIdArray[0] = tokenIdCounter;
+        tokenIdArray[0] = TOKEN_ID_COUNTER;
         mapTokenIdsAndEscrow(
             collectionIdCounter,
-            tokenIdCounter,
+            hexIdArray[0],
             address(escrowContractAddress),
             uint16(_baseTier)
         );
@@ -483,16 +491,16 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             uint16 quantity = 1000 / _subsequentTier[i];
             NFT_CONTRACT.mintToken(
                 assemblerContractAddress,
-                tokenIdCounter,
+                hexIdArray[i + 1],
                 quantity
             ); // subsequent tier tokens are minted to the assembler contract.
 
             address subsequentEscrowContract = DeployEscrowContract
-                .deployContract(ASSET_KID_NFT_ADDRESS, tokenIdCounter, false); //creating new escrow for subsequent tokens
-            tokenIdArray[i + 1] = tokenIdCounter;
+                .deployContract(ASSET_KID_NFT_ADDRESS, TOKEN_ID_COUNTER, false); //creating new escrow for subsequent tokens
+            tokenIdArray[i + 1] = TOKEN_ID_COUNTER;
             mapTokenIdsAndEscrow(
                 collectionIdCounter,
-                tokenIdCounter,
+                hexIdArray[i + 1],
                 address(subsequentEscrowContract),
                 uint16(_subsequentTier[i])
             );
@@ -532,7 +540,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         NFT_CONTRACT.safeTransferFrom(
             msg.sender,
             assembler_contract_address,
-            _tokenIdSubmit,
+            tokenId2Hex[_tokenIdSubmit],
             _tokenIdSubmitAmt,
             ""
         );
@@ -540,7 +548,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         NFT_CONTRACT.safeTransferFrom(
             assembler_contract_address,
             msg.sender,
-            _tokenIdExchange,
+            tokenId2Hex[_tokenIdExchange],
             exchangeToSubmit * amtMultiplier,
             ""
         );
@@ -573,7 +581,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         NFT_CONTRACT.mutualEscrowTransfer(
             sender, // sender
             counterAddress, // counterParty
-            tokenId, // tokenId
+            tokenId2Hex[tokenId], // tokenId
             (counterAmount >= amount) ? amount : counterAmount, // tokenAmount
             bid ? counterPrice : price, // askingPrice
             bid ? price : counterPrice, // bidingPrice
@@ -691,15 +699,16 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
 
     function mapTokenIdsAndEscrow(
         uint256 _collectionId,
-        uint256 _tokenId,
+        uint256 hexTokenId,
         address _escrowContract,
         uint16 _percentRep
     ) internal {
-        tokenId2CollectionId[_tokenId] = _collectionId;
-        tokenIdExist[_tokenId] = true;
-        tokenId2EscrowContract[_tokenId] = _escrowContract;
-        tokenId2PercentRep[_tokenId] = _percentRep;
-        tokenIdCounter += 1;
+        tokenId2Hex[TOKEN_ID_COUNTER] = hexTokenId;
+        tokenId2CollectionId[TOKEN_ID_COUNTER] = _collectionId;
+        tokenIdExist[TOKEN_ID_COUNTER] = true;
+        tokenId2EscrowContract[TOKEN_ID_COUNTER] = _escrowContract;
+        tokenId2PercentRep[TOKEN_ID_COUNTER] = _percentRep;
+        TOKEN_ID_COUNTER += 1;
     }
 
     function assetToEscrowTransfer(
@@ -732,7 +741,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             NFT_CONTRACT.safeTransferFrom(
                 address(escrow_contract),
                 replacement_address,
-                bid ? 0 : _tokenId,
+                bid ? tokenId2Hex[0] : tokenId2Hex[_tokenId],
                 replacementAmt,
                 ""
             );
@@ -741,7 +750,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         NFT_CONTRACT.safeTransferFrom(
             _from,
             address(escrow_contract),
-            bid ? 0 : _tokenId,
+            bid ? tokenId2Hex[0] : tokenId2Hex[_tokenId],
             bid ? _tokenAmt * _tokenPrice : _tokenAmt,
             ""
         );
@@ -799,7 +808,10 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     {
         return (address2UnapprovedCollection[msg.sender]);
     }
+    function getHexId(uint256 tokenId) public view returns(uint256 hexId){
+        return tokenId2Hex[tokenId];
 
+    }
     function getTokenInfo(uint256 _tokenId)
         public
         view
@@ -840,7 +852,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             }
             guessedTokenId = uint256(int256(_tokenId) + i);
 
-            if (guessedTokenId >= tokenIdCounter) {
+            if (guessedTokenId >= TOKEN_ID_COUNTER) {
                 break;
             }
 
@@ -900,7 +912,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             ,
             ,
             ,
-
+            
         ) = getTokenInfo(_tokenIdSubmit);
         (
             uint256 exchangedCollectionId,

@@ -14,9 +14,22 @@ describe("Testing Gallery Contract Features", function () {
         assetKidNftAddress,
         assetKidNftContract,
         biaTokenInfo,
-        fftTokenInfo
+        fftTokenInfo,
+        hexArray
 
     beforeEach(async () => {
+        hexArray = [
+            "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e",
+            "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678",
+            "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519",
+            "0xc651779b785af9d19d796342aadcd88cf642c1b11df85e415a3842ed26138aca",
+            "0x008e6b3b7108e5c8d2a4f5f4286202ad9a74b3a84b7a5804cdd10c6d302338b8",
+            "0x5ed8a07aa2a501489ab54d3e019df507c27a01ae1dacc11fe100eaa058725861",
+            "0x3b5b8ca65757c0ce22777ffe9b13063098d90a65a252847bcee814b355336b13",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+        ]
         libraries = await deployLib()
         galleryContractFactory = await ethers.getContractFactory(
             "GalleryContract",
@@ -47,18 +60,22 @@ describe("Testing Gallery Contract Features", function () {
 
     describe("Initial Deployment", function () {
         it("Checking gallery BIA = 10^9", async function () {
+            const bia =
+                "0x9be311107159657ffe70682e3b33dcaf994ed60bb0afd954dbdd8afa12f139e5"
             const currentValue = await assetKidNftContract.balanceOf(
                 galleryContractAddress,
-                "0"
+                bia
             )
             const expectedValue = String(10 ** 9)
             assert.equal(currentValue.toString(), expectedValue)
         })
 
         it("Checking gallery FFT = 50", async function () {
+            const fft =
+                "0x204e2560e88f1d0a68fd87ad260c282b9ad7480d8dc1158c830f3b87cf1b404d"
             const currentValue = await assetKidNftContract.balanceOf(
                 galleryContractAddress,
-                "1"
+                fft
             )
             const expectedValue = String(50)
             assert.equal(currentValue.toString(), expectedValue)
@@ -130,20 +147,41 @@ describe("Testing Gallery Contract Features", function () {
             ;[ownerAddress, creator] = await ethers.getSigners()
             _quantity = [30, 6, 4, 0, 0, 0, 0, 0, 0, 0]
             _percentage = [10, 50, 100, 0, 0, 0, 0, 0, 0, 0]
+            hexArray = [
+                "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e",
+                "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678",
+                "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+            ]
             await galleryContract
                 .connect(creator)
-                .createSimpleCollectable(_quantity, _percentage)
+                .createSimpleCollectable(_quantity, _percentage, hexArray)
             creatorAddress = creator.address
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "2"),
+                await assetKidNftContract.balanceOf(
+                    creatorAddress,
+                    "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e"
+                ),
                 30
             )
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "3"),
+                await assetKidNftContract.balanceOf(
+                    creatorAddress,
+                    "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678"
+                ),
                 6
             )
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "4"),
+                await assetKidNftContract.balanceOf(
+                    creatorAddress,
+                    "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519"
+                ),
                 4
             )
         })
@@ -152,20 +190,41 @@ describe("Testing Gallery Contract Features", function () {
             ;[ownerAddress, creator] = await ethers.getSigners()
             _quantity = [30, 7, 1, 0, 0, 0, 0, 0, 0, 0]
             _percentage = [15, 50, 200, 0, 0, 0, 0, 0, 0, 0]
+            hexArray = [
+                "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e",
+                "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678",
+                "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+            ]
             await galleryContract
                 .connect(creator)
-                .createSimpleCollectable(_quantity, _percentage)
+                .createSimpleCollectable(_quantity, _percentage, hexArray)
             creatorAddress = creator.address
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "2"),
+                await assetKidNftContract.balanceOf(
+                    creatorAddress,
+                    "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e"
+                ),
                 30
             )
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "3"),
+                await assetKidNftContract.balanceOf(
+                    creatorAddress,
+                    "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678"
+                ),
                 7
             )
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "4"),
+                await assetKidNftContract.balanceOf(
+                    creatorAddress,
+                    "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519"
+                ),
                 1
             )
         })
@@ -174,10 +233,22 @@ describe("Testing Gallery Contract Features", function () {
             ;[ownerAddress, creator] = await ethers.getSigners()
             _quantity = [30, 7, 4, 0, 0, 0, 0, 0, 0, 0]
             _percentage = [10, 50, 100, 0, 0, 0, 0, 0, 0, 0]
+            hexArray = [
+                "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e",
+                "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678",
+                "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+            ]
             await expect(
                 galleryContract
                     .connect(creator)
-                    .createSimpleCollectable(_quantity, _percentage)
+                    .createSimpleCollectable(_quantity, _percentage, hexArray)
             ).to.be.reverted
         })
 
@@ -185,10 +256,22 @@ describe("Testing Gallery Contract Features", function () {
             ;[ownerAddress, creator] = await ethers.getSigners()
             _quantity = [1, 29.5, 6, 4, 0, 0, 0, 0, 0, 0]
             _percentage = [5, 10, 50, 100, 0, 0, 0, 0, 0, 0]
+            hexArray = [
+                "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e",
+                "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678",
+                "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+            ]
             await expect(
                 galleryContract
                     .connect(creator)
-                    .createSimpleCollectable(_quantity, _percentage)
+                    .createSimpleCollectable(_quantity, _percentage, hexArray)
             ).to.be.reverted
         })
     })
@@ -198,17 +281,23 @@ describe("Testing Gallery Contract Features", function () {
             ;[ownerAddress, creator] = await ethers.getSigners()
             _quantity = [30, 6, 4, 0, 0, 0, 0, 0, 0, 0]
             _percentage = [10, 50, 100, 0, 0, 0, 0, 0, 0, 0]
-            // const txn = await galleryContract
-            //     .connect(creator)
-            //     .createSimpleCollectable(_quantity, _percentage)
-
-            // const receipt = await txn.wait()
-            // console.log(receipt)
+            hexArray = [
+                "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e",
+                "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678",
+                "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+            ]
 
             await expect(
                 galleryContract
                     .connect(creator)
-                    .createSimpleCollectable(_quantity, _percentage)
+                    .createSimpleCollectable(_quantity, _percentage, hexArray)
             )
                 .to.emit(galleryContract, "simpleCollectableCreated")
                 .withArgs(2, [2, 3, 4, 0, 0, 0, 0, 0, 0, 0], creator.address)
@@ -218,11 +307,23 @@ describe("Testing Gallery Contract Features", function () {
             ;[ownerAddress, creator] = await ethers.getSigners()
             _baseTier = 10
             _subsequentTier = [50, 250, 500, 0, 0, 0, 0, 0, 0, 0]
+            hexArray = [
+                "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e",
+                "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678",
+                "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+            ]
 
             await expect(
                 galleryContract
                     .connect(creator)
-                    .createTierCollectable(_baseTier, _subsequentTier)
+                    .createTierCollectable(_baseTier, _subsequentTier,hexArray)
             )
                 .to.emit(galleryContract, "tierCollectableCreated")
                 .withArgs(2, [2, 3, 4, 5, 0, 0, 0, 0, 0, 0], creator.address)
@@ -232,10 +333,22 @@ describe("Testing Gallery Contract Features", function () {
             ;[owner, creator] = await ethers.getSigners()
             _baseTier = 10
             _subsequentTier = [50, 250, 500, 0, 0, 0, 0, 0, 0, 0]
+            hexArray = [
+                "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e",
+                "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678",
+                "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+            ]
 
             await galleryContract
                 .connect(creator)
-                .createTierCollectable(_baseTier, _subsequentTier)
+                .createTierCollectable(_baseTier, _subsequentTier, hexArray)
 
             await galleryContract.connect(owner).approveCollectionId(2)
 
@@ -260,44 +373,61 @@ describe("Testing Gallery Contract Features", function () {
             _baseTier = 10
             _subsequentTier = [50, 250, 500, 0, 0, 0, 0, 0, 0, 0]
 
+            hexArray = [
+                "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e",
+                "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678",
+                "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519",
+                "0xc651779b785af9d19d796342aadcd88cf642c1b11df85e415a3842ed26138aca",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+            ]
+
             await galleryContract
                 .connect(creator)
-                .createTierCollectable(_baseTier, _subsequentTier)
+                .createTierCollectable(_baseTier, _subsequentTier, hexArray)
 
             tokenInfo = await galleryContract.getTokenInfo(2)
             assemblerAddress = await tokenInfo[3]
 
+            hexId = await galleryContract.getHexId(2)
+
             creatorAddress = await creator.address
+
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "2"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 1000 / _baseTier
             )
+
+            tokenInfo = await galleryContract.getTokenInfo(3)
+            hexId = await galleryContract.getHexId(3)
+
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "3"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 0
             )
+
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "4"),
-                0
-            )
-            assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "5"),
-                0
-            )
-            assert.equal(
-                await assetKidNftContract.balanceOf(assemblerAddress, "2"),
-                0
-            )
-            assert.equal(
-                await assetKidNftContract.balanceOf(assemblerAddress, "3"),
+                await assetKidNftContract.balanceOf(assemblerAddress, hexId),
                 1000 / _subsequentTier[0]
             )
+
+            tokenInfo = await galleryContract.getTokenInfo(4)
+            hexId = await galleryContract.getHexId(4)
+
             assert.equal(
-                await assetKidNftContract.balanceOf(assemblerAddress, "4"),
+                await assetKidNftContract.balanceOf(assemblerAddress, hexId),
                 1000 / _subsequentTier[1]
             )
+
+            tokenInfo = await galleryContract.getTokenInfo(5)
+            hexId = await galleryContract.getHexId(5)
+
             assert.equal(
-                await assetKidNftContract.balanceOf(assemblerAddress, "5"),
+                await assetKidNftContract.balanceOf(assemblerAddress, hexId),
                 1000 / _subsequentTier[2]
             )
         })
@@ -336,7 +466,7 @@ describe("Testing Gallery Contract Features", function () {
             await expect(
                 galleryContract
                     .connect(creator)
-                    .exchangeTierToken(_baseTier, _subsequentTier)
+                    .exchangeTierToken(_baseTier, _subsequentTier, hexArray)
             ).to.be.reverted
         })
 
@@ -349,17 +479,20 @@ describe("Testing Gallery Contract Features", function () {
 
             await galleryContract
                 .connect(creator)
-                .createTierCollectable(_baseTier, _subsequentTier)
+                .createTierCollectable(_baseTier, _subsequentTier, hexArray)
 
             await galleryContract.connect(owner).approveCollectionId(2)
 
             tokenInfo = await galleryContract.getTokenInfo(2)
             assemblerAddress = await tokenInfo[3]
+
             creatorAddress = await creator.address
             creatorToken2InitAmount = 1000 / _baseTier
 
+            hexId = await galleryContract.getHexId(2)
+
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "2"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 creatorToken2InitAmount
             )
 
@@ -371,12 +504,13 @@ describe("Testing Gallery Contract Features", function () {
             )
 
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "2"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 creatorToken2InitAmount - 25
             )
 
+            hexId = await galleryContract.getHexId(4)
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "4"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 1
             )
         })
@@ -390,7 +524,7 @@ describe("Testing Gallery Contract Features", function () {
 
             await galleryContract
                 .connect(creator)
-                .createTierCollectable(_baseTier, _subsequentTier)
+                .createTierCollectable(_baseTier, _subsequentTier, hexArray)
 
             await galleryContract.connect(owner).approveCollectionId(2)
 
@@ -399,8 +533,9 @@ describe("Testing Gallery Contract Features", function () {
             creatorAddress = await creator.address
             creatorToken2InitAmount = 1000 / _baseTier
 
+            hexId = await galleryContract.getHexId(2)
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "2"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 creatorToken2InitAmount
             )
 
@@ -411,13 +546,15 @@ describe("Testing Gallery Contract Features", function () {
                 5 // TokenId exchange (50%)
             )
 
+            hexId = await galleryContract.getHexId(2)
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "2"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 creatorToken2InitAmount - 50
             )
 
+            hexId = await galleryContract.getHexId(5)
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "5"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 1
             )
         })
@@ -431,7 +568,7 @@ describe("Testing Gallery Contract Features", function () {
 
             await galleryContract
                 .connect(creator)
-                .createTierCollectable(_baseTier, _subsequentTier)
+                .createTierCollectable(_baseTier, _subsequentTier, hexArray)
 
             await galleryContract.connect(owner).approveCollectionId(2)
 
@@ -440,8 +577,10 @@ describe("Testing Gallery Contract Features", function () {
             creatorAddress = await creator.address
             creatorToken2InitAmount = 1000 / _baseTier
 
+            hexId = await galleryContract.getHexId(2)
+
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "2"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 creatorToken2InitAmount
             )
 
@@ -453,12 +592,14 @@ describe("Testing Gallery Contract Features", function () {
             )
 
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "2"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 creatorToken2InitAmount - 100
             )
 
+            hexId = await galleryContract.getHexId(5)
+
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "5"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 2
             )
         })
@@ -472,7 +613,7 @@ describe("Testing Gallery Contract Features", function () {
 
             await galleryContract
                 .connect(creator)
-                .createTierCollectable(_baseTier, _subsequentTier)
+                .createTierCollectable(_baseTier, _subsequentTier, hexArray)
 
             await galleryContract.connect(owner).approveCollectionId(2)
 
@@ -480,9 +621,9 @@ describe("Testing Gallery Contract Features", function () {
             assemblerAddress = await tokenInfo[3]
             creatorAddress = await creator.address
             creatorToken2InitAmount = 1000 / _baseTier
-
+            hexId = await galleryContract.getHexId(2)
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "2"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 creatorToken2InitAmount
             )
 
@@ -494,17 +635,20 @@ describe("Testing Gallery Contract Features", function () {
             )
 
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "2"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 creatorToken2InitAmount - 100
             )
 
+            hexId = await galleryContract.getHexId(6)
+
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "6"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 1
             )
         })
 
         it("Exchanging down 1(50%) -> 50(1%)", async function () {
+        
             ;[owner, creator, collector1] = await ethers.getSigners()
             _baseTier = 10
             _subsequentTier = [50, 250, 500, 0, 0, 0, 0, 0, 0, 0]
@@ -513,7 +657,7 @@ describe("Testing Gallery Contract Features", function () {
 
             await galleryContract
                 .connect(creator)
-                .createTierCollectable(_baseTier, _subsequentTier)
+                .createTierCollectable(_baseTier, _subsequentTier, hexArray)
 
             await galleryContract.connect(owner).approveCollectionId(2)
 
@@ -536,13 +680,15 @@ describe("Testing Gallery Contract Features", function () {
                 2 // TokenId exchange (50%)
             )
 
-            assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "2"),
-                creatorToken2InitAmount - 100 + 50
-            )
+            hexId = await galleryContract.getHexId(2)
 
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "5"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
+                creatorToken2InitAmount - 100 + 50
+            )
+            hexId = await galleryContract.getHexId(5)
+            assert.equal(
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 0 + 2 - 1
             )
         })
@@ -556,7 +702,7 @@ describe("Testing Gallery Contract Features", function () {
 
             await galleryContract
                 .connect(creator)
-                .createTierCollectable(_baseTier, _subsequentTier)
+                .createTierCollectable(_baseTier, _subsequentTier, hexArray)
 
             await galleryContract.connect(owner).approveCollectionId(2)
 
@@ -578,14 +724,14 @@ describe("Testing Gallery Contract Features", function () {
                 1, // amount
                 2 // TokenId exchange (1%)
             )
-
+            hexId = await galleryContract.getHexId(2)
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "2"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 creatorToken2InitAmount - 100 + 100
             )
-
+            hexId = await galleryContract.getHexId(6)
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "6"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 0 + 1 - 1
             )
         })
@@ -599,7 +745,7 @@ describe("Testing Gallery Contract Features", function () {
 
             await galleryContract
                 .connect(creator)
-                .createTierCollectable(_baseTier, _subsequentTier)
+                .createTierCollectable(_baseTier, _subsequentTier, hexArray)
 
             await galleryContract.connect(owner).approveCollectionId(2)
 
@@ -614,9 +760,9 @@ describe("Testing Gallery Contract Features", function () {
                 100, // amount
                 6 // TokenId exchange (100%)
             )
-
+            hexId = await galleryContract.getHexId(6)
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "6"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 "1"
             )
 
@@ -626,14 +772,14 @@ describe("Testing Gallery Contract Features", function () {
                 1, // amount
                 4 // TokenId exchange (25%)
             )
-
+            hexId = await galleryContract.getHexId(2)
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "2"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 creatorToken2InitAmount - 100
             )
-
+            hexId = await galleryContract.getHexId(4)
             assert.equal(
-                await assetKidNftContract.balanceOf(creatorAddress, "4"),
+                await assetKidNftContract.balanceOf(creatorAddress, hexId),
                 0 + 4
             )
         })
@@ -649,11 +795,24 @@ describe("Testing Escrow Features", function () {
         escrowContract,
         owner,
         collector1,
-        creator
+        creator,
+        hexArray
 
     beforeEach(async () => {
         // Grab owner, creator, and collector
         ;[owner, creator, collector1] = await ethers.getSigners()
+        hexArray = [
+            "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e",
+            "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678",
+            "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519",
+            "0xc651779b785af9d19d796342aadcd88cf642c1b11df85e415a3842ed26138aca",
+            "0x008e6b3b7108e5c8d2a4f5f4286202ad9a74b3a84b7a5804cdd10c6d302338b8",
+            "0x5ed8a07aa2a501489ab54d3e019df507c27a01ae1dacc11fe100eaa058725861",
+            "0x3b5b8ca65757c0ce22777ffe9b13063098d90a65a252847bcee814b355336b13",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+        ]
 
         // Deploy the contract and its preq. libraries.
 
@@ -691,7 +850,7 @@ describe("Testing Escrow Features", function () {
 
         await galleryContract
             .connect(creator)
-            .createTierCollectable(_baseTier, _subsequentTier)
+            .createTierCollectable(_baseTier, _subsequentTier, hexArray)
 
         testCollectionInfo = await galleryContract.getTokenInfo(2)
 
@@ -923,12 +1082,16 @@ describe("Testing Escrow Features", function () {
                 .connect(creator)
                 .submitOffer(tokenId, offer_amount, offer_price, false)
 
+            hexId = await galleryContract.getHexId(0)
+
             assert.equal(
-                await assetKidNftContract.balanceOf(collector1.address, 0),
+                await assetKidNftContract.balanceOf(collector1.address, hexId),
                 10000 - bid_amount * bid_price
             )
+
+            hexId = await galleryContract.getHexId(2)
             assert.equal(
-                await assetKidNftContract.balanceOf(collector1.address, 2),
+                await assetKidNftContract.balanceOf(collector1.address, hexId),
                 bid_amount
             )
         })
@@ -961,13 +1124,14 @@ describe("Testing Escrow Features", function () {
             await galleryContract
                 .connect(creator)
                 .submitOffer(tokenId, offer_amount, offer_price, false)
-
+            hexId = await galleryContract.getHexId(0)
             assert.equal(
-                await assetKidNftContract.balanceOf(creator.address, 0),
+                await assetKidNftContract.balanceOf(creator.address, hexId),
                 bid_amount * bid_price
             )
+            hexId = await galleryContract.getHexId(2)
             assert.equal(
-                await assetKidNftContract.balanceOf(creator.address, 2),
+                await assetKidNftContract.balanceOf(creator.address, hexId),
                 100 - 10
             )
         })
@@ -1000,13 +1164,16 @@ describe("Testing Escrow Features", function () {
             await galleryContract
                 .connect(collector1)
                 .submitOffer(tokenId, bid_amount, bid_price, true)
+            hexId = await galleryContract.getHexId(0)
 
             assert.equal(
-                await assetKidNftContract.balanceOf(collector1.address, 0),
+                await assetKidNftContract.balanceOf(collector1.address, hexId),
                 10000 - bid_amount * bid_price
             )
+            hexId = await galleryContract.getHexId(2)
+
             assert.equal(
-                await assetKidNftContract.balanceOf(collector1.address, 2),
+                await assetKidNftContract.balanceOf(collector1.address, hexId),
                 bid_amount
             )
         })
@@ -1039,13 +1206,15 @@ describe("Testing Escrow Features", function () {
             await galleryContract
                 .connect(collector1)
                 .submitOffer(tokenId, bid_amount, bid_price, true)
-
+            
+            hexId = await galleryContract.getHexId(0)
             assert.equal(
-                await assetKidNftContract.balanceOf(creator.address, 0),
+                await assetKidNftContract.balanceOf(creator.address, hexId),
                 bid_amount * bid_price
             )
+            hexId = await galleryContract.getHexId(2)
             assert.equal(
-                await assetKidNftContract.balanceOf(creator.address, 2),
+                await assetKidNftContract.balanceOf(creator.address, hexId),
                 100 - 10
             )
         })
@@ -1078,13 +1247,14 @@ describe("Testing Escrow Features", function () {
                 .submitOffer(tokenId, offer_amount, offer_price, false)
 
             //bid difference = 5BIA/SFT * (20-10)SFT = 50 BIA
-
+            hexId = await galleryContract.getHexId(0)
             assert.equal(
-                await assetKidNftContract.balanceOf(escrowContract.address, 0),
+                await assetKidNftContract.balanceOf(escrowContract.address, hexId),
                 50
             )
+            hexId = await galleryContract.getHexId(2)
             assert.equal(
-                await assetKidNftContract.balanceOf(collector1.address, 2),
+                await assetKidNftContract.balanceOf(collector1.address, hexId),
                 offer_amount
             )
         })
@@ -1116,13 +1286,15 @@ describe("Testing Escrow Features", function () {
                 .submitOffer(tokenId, bid_amount, bid_price, true)
 
             //bid difference = 5BIA/SFT * (20-10)SFT = 50 BIA
-
+            hexId = await galleryContract.getHexId(0)
+           
             assert.equal(
-                await assetKidNftContract.balanceOf(escrowContract.address, 0),
+                await assetKidNftContract.balanceOf(escrowContract.address, hexId),
                 50
             )
+            hexId = await galleryContract.getHexId(2)
             assert.equal(
-                await assetKidNftContract.balanceOf(collector1.address, 2),
+                await assetKidNftContract.balanceOf(collector1.address, hexId),
                 offer_amount
             )
         })
@@ -1155,13 +1327,14 @@ describe("Testing Escrow Features", function () {
                 .submitOffer(tokenId, bid_amount, bid_price, true)
 
             //bid difference = 5BIA/SFT * (20-10)SFT = 50 BIA
-
+            hexId = await galleryContract.getHexId(0)
             assert.equal(
-                await assetKidNftContract.balanceOf(escrowContract.address, 0),
+                await assetKidNftContract.balanceOf(escrowContract.address, hexId),
                 0
             )
+            hexId = await galleryContract.getHexId(2)
             assert.equal(
-                await assetKidNftContract.balanceOf(escrowContract.address, 2),
+                await assetKidNftContract.balanceOf(escrowContract.address, hexId),
                 10
             )
         })
@@ -1194,12 +1367,14 @@ describe("Testing Escrow Features", function () {
                 .submitOffer(tokenId, bid_amount, bid_price, true)
 
             //bid difference = 5BIA/SFT * (20-10)SFT = 50 BIA
+            hexId = await galleryContract.getHexId(0)
             assert.equal(
-                await assetKidNftContract.balanceOf(galleryContract.address, 0),
+                await assetKidNftContract.balanceOf(galleryContract.address, hexId),
                 10 ** 9 - 10000 + (20 - 10) * 5
             )
+            hexId = await galleryContract.getHexId(2)
             assert.equal(
-                await assetKidNftContract.balanceOf(escrowContract.address, 2),
+                await assetKidNftContract.balanceOf(escrowContract.address, hexId),
                 10
             )
         })
@@ -1290,9 +1465,23 @@ describe("Bid Array Overflow", function () {
         owner,
         collector1,
         creator,
-        lastCollector
+        lastCollector,
+        hexArray
 
     beforeEach(async () => {
+        hexArray = [
+            "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e",
+            "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678",
+            "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519",
+            "0xc651779b785af9d19d796342aadcd88cf642c1b11df85e415a3842ed26138aca",
+            "0x008e6b3b7108e5c8d2a4f5f4286202ad9a74b3a84b7a5804cdd10c6d302338b8",
+            "0x5ed8a07aa2a501489ab54d3e019df507c27a01ae1dacc11fe100eaa058725861",
+            "0x3b5b8ca65757c0ce22777ffe9b13063098d90a65a252847bcee814b355336b13",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+        ]
+
         // Grab owner, creator, and collector
         ;[owner, creator, collector1, lastCollector] = await ethers.getSigners()
 
@@ -1332,7 +1521,7 @@ describe("Bid Array Overflow", function () {
 
         await galleryContract
             .connect(creator)
-            .createTierCollectable(_baseTier, _subsequentTier)
+            .createTierCollectable(_baseTier, _subsequentTier, hexArray)
 
         testCollectionInfo = await galleryContract.getTokenInfo(2)
 
@@ -1419,8 +1608,9 @@ describe("Bid Array Overflow", function () {
         assert.equal(bidArray49[1], collector1Price)
         assert.equal(bidArray49[2], collctor1Amount)
         // NFT is refunded to last collector
+        hexId = await galleryContract.getHexId(0)
         assert.equal(
-            await assetKidNftContract.balanceOf(lastCollector.address, "0"),
+            await assetKidNftContract.balanceOf(lastCollector.address, hexId),
             1000
         )
     })
@@ -1452,9 +1642,22 @@ describe("Ask Array Overflow", function () {
         owner,
         collector1,
         creator,
-        lastCollector
+        lastCollector,
+        hexArray
 
     beforeEach(async () => {
+        hexArray = [
+            "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e",
+            "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678",
+            "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519",
+            "0xc651779b785af9d19d796342aadcd88cf642c1b11df85e415a3842ed26138aca",
+            "0x008e6b3b7108e5c8d2a4f5f4286202ad9a74b3a84b7a5804cdd10c6d302338b8",
+            "0x5ed8a07aa2a501489ab54d3e019df507c27a01ae1dacc11fe100eaa058725861",
+            "0x3b5b8ca65757c0ce22777ffe9b13063098d90a65a252847bcee814b355336b13",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+        ]
         // Grab owner, creator, and collector
         ;[owner, creator, collector1, lastCollector] = await ethers.getSigners()
 
@@ -1494,7 +1697,7 @@ describe("Ask Array Overflow", function () {
 
         await galleryContract
             .connect(creator)
-            .createTierCollectable(_baseTier, _subsequentTier)
+            .createTierCollectable(_baseTier, _subsequentTier, hexArray)
 
         testCollectionInfo = await galleryContract.getTokenInfo(2)
 
@@ -1576,8 +1779,11 @@ describe("Ask Array Overflow", function () {
         assert.equal(bidArray49[1], collector1Price)
         assert.equal(bidArray49[2], collctor1Amount)
         // SFT is refunded to last collector
+
+        hexId = await galleryContract.getHexId(2)
+        
         assert.equal(
-            await assetKidNftContract.balanceOf(lastCollector.address, "2"),
+            await assetKidNftContract.balanceOf(lastCollector.address, hexId),
             1
         )
     })
@@ -1608,11 +1814,24 @@ describe("Support Functions", function () {
         escrowContract,
         owner,
         collector1,
-        creator
+        creator,
+        hexArray
     beforeEach(async () => {
         // Grab owner, creator, and collector
         ;[owner, creator, collector1, lastCollector] = await ethers.getSigners()
         // Deploy the contract and its preq. libraries.
+        hexArray = [
+            "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e",
+            "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678",
+            "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519",
+            "0xc651779b785af9d19d796342aadcd88cf642c1b11df85e415a3842ed26138aca",
+            "0x008e6b3b7108e5c8d2a4f5f4286202ad9a74b3a84b7a5804cdd10c6d302338b8",
+            "0x5ed8a07aa2a501489ab54d3e019df507c27a01ae1dacc11fe100eaa058725861",
+            "0x3b5b8ca65757c0ce22777ffe9b13063098d90a65a252847bcee814b355336b13",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+        ]
 
         libraries = await deployLib()
         galleryContractFactory = await ethers.getContractFactory(
@@ -1659,7 +1878,7 @@ describe("Support Functions", function () {
 
         await galleryContract
             .connect(creator)
-            .createTierCollectable(_baseTier, _subsequentTier)
+            .createTierCollectable(_baseTier, _subsequentTier, hexArray)
 
         testCollectionInfo = await galleryContract.getTokenInfo(2)
 
@@ -1680,14 +1899,15 @@ describe("Support Functions", function () {
             .commercializeCollectionId(2, initAmt, initPrice, false)
 
         // NFT is transferred to escrow
+        hexId = await galleryContract.getHexId(2)
         tokenBal = await assetKidNftContract
             .connect(creator)
-            .balanceOf(creator.address, "2")
+            .balanceOf(creator.address, hexId)
         assert.equal(tokenBal, 100 - initAmt)
 
         escrowTokenBal = await assetKidNftContract
             .connect(creator)
-            .balanceOf(escrowContract.address, "2")
+            .balanceOf(escrowContract.address, hexId)
         assert.equal(escrowTokenBal, initAmt)
     })
 
@@ -1699,7 +1919,6 @@ describe("Support Functions", function () {
             .connect(creator)
             .getContractStatus()
 
-        
         // collectionState 0 = UNVERIFIED
         // COMMERCIALIZATION = true
 
@@ -1726,21 +1945,26 @@ describe("Support Functions", function () {
             .connect(creator)
             .commercializeCollectionId(2, initAmt, initPrice, false)
 
-        supportAmt =2
+        supportAmt = 2
 
-        await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
-        supportInfo = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
+        await galleryContract
+            .connect(collector1)
+            .supportCollectionId(2, supportAmt)
+        supportInfo = await escrowContract
+            .connect(collector1)
+            .getYourSupportInfo(collector1.address)
+
+        hexId = await galleryContract.getHexId(0)
 
         tokenBal = await assetKidNftContract
             .connect(collector1)
-            .balanceOf(collector1.address, 0)
-        assert.equal(tokenBal, 1000 - initPrice*supportAmt)
+            .balanceOf(collector1.address, hexId)
+        assert.equal(tokenBal, 1000 - initPrice * supportAmt)
 
         escrowTokenBal = await assetKidNftContract
             .connect(collector1)
-            .balanceOf(escrowContract.address, 0)
-        assert.equal(escrowTokenBal, initPrice*supportAmt)
-
+            .balanceOf(escrowContract.address, hexId)
+        assert.equal(escrowTokenBal, initPrice * supportAmt)
 
         assert.equal(supportInfo[1], supportAmt)
     })
@@ -1753,32 +1977,43 @@ describe("Support Functions", function () {
             .connect(creator)
             .commercializeCollectionId(2, initAmt, initPrice, false)
 
-        supportAmt =2
-        await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
-        
-        supportInfo = await escrowContract.connect(creator).getYourSupportInfo(creator.address)
+        supportAmt = 2
+        await galleryContract
+            .connect(collector1)
+            .supportCollectionId(2, supportAmt)
+
+        supportInfo = await escrowContract
+            .connect(creator)
+            .getYourSupportInfo(creator.address)
         //console.log(`Creator Bia Owed ${supportInfo}`)
 
-        biaInEscrow = await assetKidNftContract.connect(owner).balanceOf(escrowContract.address, "0")
+        hexId = await galleryContract.getHexId(0)
+
+        biaInEscrow = await assetKidNftContract
+            .connect(owner)
+            .balanceOf(escrowContract.address, hexId)
         //console.log(`bia in escrow ${biaInEscrow}`)
 
         await galleryContract.connect(owner).approveCollectionId(2)
-        // 
-        creatorBia = await assetKidNftContract.connect(creator).balanceOf(creator.address, "0")
+        //
+        creatorBia = await assetKidNftContract
+            .connect(creator)
+            .balanceOf(creator.address, hexId)
         //console.log(`Creator Bia ${creatorBia}`)
-        biaInEscrow = await assetKidNftContract.connect(owner).balanceOf(escrowContract.address, "0")
+        biaInEscrow = await assetKidNftContract
+            .connect(owner)
+            .balanceOf(escrowContract.address, hexId)
         //console.log(`bia in escrow after collection approves ${biaInEscrow}`)
         // supportInfo = await escrowContract.connect(creator).getYourSupportInfo(creator.address)
         // escrowStatus = await escrowContract.connect(creator).getContractStatus()
         // console.log(`support info ${supportInfo}`)
         // console.log(`escrow status ${escrowStatus}`)
 
-        // collector doest get until claim. 
-        assert.equal(creatorBia, supportAmt*initPrice)
+        // collector doest get until claim.
+        assert.equal(creatorBia, supportAmt * initPrice)
     })
 
     it("Gallery Approves: SFT transfers", async function () {
-
         initAmt = 50
         initPrice = 100
 
@@ -1786,38 +2021,50 @@ describe("Support Functions", function () {
             .connect(creator)
             .commercializeCollectionId(2, initAmt, initPrice, false)
 
-        supportAmt =2
-        await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
-        
-        supportInfo = await escrowContract.connect(creator).getYourSupportInfo(creator.address)
+        supportAmt = 2
+        await galleryContract
+            .connect(collector1)
+            .supportCollectionId(2, supportAmt)
+
+        supportInfo = await escrowContract
+            .connect(creator)
+            .getYourSupportInfo(creator.address)
         //console.log(`Creator Bia Owed ${supportInfo}`)
 
-        biaInEscrow = await assetKidNftContract.connect(owner).balanceOf(escrowContract.address, "0")
+        hexId = await galleryContract.getHexId(0)
+
+        biaInEscrow = await assetKidNftContract
+            .connect(owner)
+            .balanceOf(escrowContract.address, hexId)
         //console.log(`bia in escrow ${biaInEscrow}`)
 
         await galleryContract.connect(owner).approveCollectionId(2)
-        // 
-        collectorSFT = await assetKidNftContract.connect(creator).balanceOf(collector1.address, "2")
+        //
+        hexId = await galleryContract.getHexId(2)
+        collectorSFT = await assetKidNftContract
+            .connect(creator)
+            .balanceOf(collector1.address, hexId)
         //console.log(`Creator Bia ${creatorBia}`)
-        
+
         //console.log(`bia in escrow after collection approves ${biaInEscrow}`)
         // supportInfo = await escrowContract.connect(creator).getYourSupportInfo(creator.address)
         // escrowStatus = await escrowContract.connect(creator).getContractStatus()
         // console.log(`support info ${supportInfo}`)
         // console.log(`escrow status ${escrowStatus}`)
 
-        // collector doest get until claim. 
+        // collector doest get until claim.
         assert.equal(collectorSFT, 0)
 
         //claim
         await galleryContract.connect(collector1).claimSFT(2)
 
-        collectorSFT = await assetKidNftContract.connect(creator).balanceOf(collector1.address, "2")
+        collectorSFT = await assetKidNftContract
+            .connect(creator)
+            .balanceOf(collector1.address, hexId)
         assert.equal(collectorSFT, 2)
-        
     })
 
-    it("Collector withdraw support: BIA transfer back to collector", async function (){
+    it("Collector withdraw support: BIA transfer back to collector", async function () {
         initAmt = 50
         initPrice = 100
 
@@ -1825,16 +2072,22 @@ describe("Support Functions", function () {
             .connect(creator)
             .commercializeCollectionId(2, initAmt, initPrice, false)
 
-        supportAmt =2
-        await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
+        supportAmt = 2
+        await galleryContract
+            .connect(collector1)
+            .supportCollectionId(2, supportAmt)
         await galleryContract.connect(collector1).withdrawSupport(2)
 
-        collectorBia = await assetKidNftContract.connect(creator).balanceOf(collector1.address, "0")
-        assert.equal(collectorBia, 1000)
+        hexId = await galleryContract.getHexId(0)
 
+
+        collectorBia = await assetKidNftContract
+            .connect(creator)
+            .balanceOf(collector1.address, hexId)
+        assert.equal(collectorBia, 1000)
     })
 
-    it("Collector withdraw support: BIA recoded accurately", async function (){
+    it("Collector withdraw support: BIA recoded accurately", async function () {
         initAmt = 50
         initPrice = 100
 
@@ -1842,22 +2095,27 @@ describe("Support Functions", function () {
             .connect(creator)
             .commercializeCollectionId(2, initAmt, initPrice, false)
 
-        supportAmt =2
-        await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
+        supportAmt = 2
+        await galleryContract
+            .connect(collector1)
+            .supportCollectionId(2, supportAmt)
 
-        supportInfo = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
+        supportInfo = await escrowContract
+            .connect(collector1)
+            .getYourSupportInfo(collector1.address)
         assert.equal(supportInfo[0], 0)
         assert.equal(supportInfo[1], supportAmt)
 
         await galleryContract.connect(collector1).withdrawSupport(2)
 
-        supportInfo = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
+        supportInfo = await escrowContract
+            .connect(collector1)
+            .getYourSupportInfo(collector1.address)
         assert.equal(supportInfo[0], 0)
         assert.equal(supportInfo[1], 0)
-
     })
 
-    it("Creator cancel collection: SFT transfer back to creator, BIA available to withdraw", async function (){
+    it("Creator cancel collection: SFT transfer back to creator, BIA available to withdraw", async function () {
         initAmt = 50
         initPrice = 100
 
@@ -1865,28 +2123,38 @@ describe("Support Functions", function () {
             .connect(creator)
             .commercializeCollectionId(2, initAmt, initPrice, false)
         
-        creatorSftBal = await assetKidNftContract.balanceOf(creator.address, "2")
+        hexId = await galleryContract.getHexId(2)
+
+        creatorSftBal = await assetKidNftContract.balanceOf(
+            creator.address,
+            hexId
+        )
         assert.equal(creatorSftBal, 50)
 
-        supportAmt =2
-        await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
+        supportAmt = 2
+        await galleryContract
+            .connect(collector1)
+            .supportCollectionId(2, supportAmt)
 
         await galleryContract
             .connect(creator)
             .commercializeCollectionId(2, 0, 0, true)
-        
-        creatorSftBal = await assetKidNftContract.connect(owner).balanceOf(creator.address, "2")
+
+        creatorSftBal = await assetKidNftContract
+            .connect(owner)
+            .balanceOf(creator.address, hexId)
         assert.equal(creatorSftBal, 100)
         // console.log(creatorSftBal)
+        hexId = await galleryContract.getHexId(0)
 
-        escrowBiaBal = await assetKidNftContract.connect(owner).balanceOf(escrowContract.address, "0")
+        escrowBiaBal = await assetKidNftContract
+            .connect(owner)
+            .balanceOf(escrowContract.address, hexId)
         // console.log(escrowBiaBal)
         assert.equal(escrowBiaBal, supportAmt * initPrice)
-
     })
 
-    it("Creator cancel collection: SFT transfer back to creator, collector1 withdraw, recorded properly", async function (){
-        
+    it("Creator cancel collection: SFT transfer back to creator, collector1 withdraw, recorded properly", async function () {
         initAmt = 50
         initPrice = 100
 
@@ -1894,38 +2162,54 @@ describe("Support Functions", function () {
             .connect(creator)
             .commercializeCollectionId(2, initAmt, initPrice, false)
         
-        creatorSftBal = await assetKidNftContract.balanceOf(creator.address, "2")
+        hexId = await galleryContract.getHexId(2)
+
+        creatorSftBal = await assetKidNftContract.balanceOf(
+            creator.address,
+            hexId
+        )
         assert.equal(creatorSftBal, 50)
 
-        supportAmt =2
-        await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
-        collector1BIA = await assetKidNftContract.balanceOf(collector1.address, "0")
+        supportAmt = 2
+        await galleryContract
+            .connect(collector1)
+            .supportCollectionId(2, supportAmt)
+
+        hexId = await galleryContract.getHexId(0)
+
+        collector1BIA = await assetKidNftContract.balanceOf(
+            collector1.address,
+            hexId
+        )
         // console.log(collector1BIA)
 
-        supportInfo = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
+        supportInfo = await escrowContract
+            .connect(collector1)
+            .getYourSupportInfo(collector1.address)
         assert.equal(supportInfo[1], supportAmt)
         //assert.equal(supportInfo[1], supportAmt)
 
-
-        //Creator Cancelling. 
+        //Creator Cancelling.
 
         await galleryContract
             .connect(creator)
             .commercializeCollectionId(2, 0, 0, true)
 
         // Collevtor Claiming SFT
-        
+
         await galleryContract.connect(collector1).claimSFT(2)
-        collector1BIA = await assetKidNftContract.balanceOf(collector1.address, "0")
+        collector1BIA = await assetKidNftContract.balanceOf(
+            collector1.address,
+            hexId
+        )
 
-        supportInfo = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
+        supportInfo = await escrowContract
+            .connect(collector1)
+            .getYourSupportInfo(collector1.address)
         assert.equal(supportInfo[1], 0)
-        
-
     })
 
-    it("Creator cancel collection: SFT transfer back to creator, collector1 withdraw, transferred properly", async function (){
-        
+    it("Creator cancel collection: SFT transfer back to creator, collector1 withdraw, transferred properly", async function () {
         initAmt = 50
         initPrice = 100
 
@@ -1933,78 +2217,114 @@ describe("Support Functions", function () {
             .connect(creator)
             .commercializeCollectionId(2, initAmt, initPrice, false)
         
-        creatorSftBal = await assetKidNftContract.balanceOf(creator.address, "2")
+        hexId = await galleryContract.getHexId(2)
+
+        creatorSftBal = await assetKidNftContract.balanceOf(
+            creator.address,
+            hexId
+        )
         assert.equal(creatorSftBal, 50)
 
-        // Collector 1 BIA = 1000
-        collector1BIA = await assetKidNftContract.balanceOf(collector1.address, "0")
-        assert.equal(collector1BIA, 1000 )
+        hexId = await galleryContract.getHexId(0)
 
-        supportInfo  = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
-        constractStat = await escrowContract.connect(collector1).getContractStatus()
+        // Collector 1 BIA = 1000
+        collector1BIA = await assetKidNftContract.balanceOf(
+            collector1.address,
+            hexId
+        )
+        assert.equal(collector1BIA, 1000)
+
+        supportInfo = await escrowContract
+            .connect(collector1)
+            .getYourSupportInfo(collector1.address)
+        constractStat = await escrowContract
+            .connect(collector1)
+            .getContractStatus()
         // console.log(`pre support Contract ${constractStat}`)
         // console.log(`pre support ${supportInfo}`)
         // console.log(`pre support BIA ${collector1BIA}`)
 
-        supportAmt =2
-        await galleryContract.connect(collector1).supportCollectionId(2, supportAmt)
-        collector1BIA = await assetKidNftContract.balanceOf(collector1.address, "0")
-        supportInfo  = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
-        constractStat = await escrowContract.connect(collector1).getContractStatus()
+        supportAmt = 2
+        await galleryContract
+            .connect(collector1)
+            .supportCollectionId(2, supportAmt)
+        collector1BIA = await assetKidNftContract.balanceOf(
+            collector1.address,
+            hexId
+        )
+        supportInfo = await escrowContract
+            .connect(collector1)
+            .getYourSupportInfo(collector1.address)
+        constractStat = await escrowContract
+            .connect(collector1)
+            .getContractStatus()
         // console.log(`post support Contract ${constractStat}`)
         // console.log(`post support ${supportInfo}`)
         // console.log(`post support BIA ${collector1BIA}`)
 
-
         // Collector 1 BIA = 1000 - 2*100 = 800
-        assert.equal(collector1BIA, 1000 - supportAmt*initPrice )
+        assert.equal(collector1BIA, 1000 - supportAmt * initPrice)
         //assert.equal(supportInfo[1], supportAmt)
 
         //Pre-Cancelling
-        supportInfo  = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
-        collector1BIA = await assetKidNftContract.balanceOf(collector1.address, "0")
-        constractStat = await escrowContract.connect(collector1).getContractStatus()
+        supportInfo = await escrowContract
+            .connect(collector1)
+            .getYourSupportInfo(collector1.address)
+        collector1BIA = await assetKidNftContract.balanceOf(
+            collector1.address,
+            hexId
+        )
+        constractStat = await escrowContract
+            .connect(collector1)
+            .getContractStatus()
         // console.log(`pre cancelling | Contract ${constractStat}`)
         // console.log(`pre cancelling | Info ${supportInfo}`)
         // console.log(`pre cancelling | BIA ${collector1BIA}`)
-        //Creator Cancelling. 
+        //Creator Cancelling.
 
         await galleryContract
             .connect(creator)
             .commercializeCollectionId(2, 0, 0, true)
 
-        supportInfo  = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
-        collector1BIA = await assetKidNftContract.balanceOf(collector1.address, "0")
-        constractStat = await escrowContract.connect(collector1).getContractStatus()
+        supportInfo = await escrowContract
+            .connect(collector1)
+            .getYourSupportInfo(collector1.address)
+        collector1BIA = await assetKidNftContract.balanceOf(
+            collector1.address,
+            hexId
+        )
+        constractStat = await escrowContract
+            .connect(collector1)
+            .getContractStatus()
         // console.log(`post cancelling | Contract ${constractStat}`)
         // console.log(`post cancelling | Info ${supportInfo}`)
         // console.log(`post cancelling | BIA ${collector1BIA}`)
 
         // Collector Claiming SFT
-        
+
         await galleryContract.connect(collector1).claimSFT(2)
 
-        supportInfo  = await escrowContract.connect(collector1).getYourSupportInfo(collector1.address)
-        collector1BIA = await assetKidNftContract.balanceOf(collector1.address, "0")
-        constractStat = await escrowContract.connect(collector1).getContractStatus()
+        supportInfo = await escrowContract
+            .connect(collector1)
+            .getYourSupportInfo(collector1.address)
+        collector1BIA = await assetKidNftContract.balanceOf(
+            collector1.address,
+            hexId
+        )
+        constractStat = await escrowContract
+            .connect(collector1)
+            .getContractStatus()
         // console.log(`post claiming | Contract ${constractStat}`)
         // console.log(`post claiming | Info ${supportInfo}`)
         // console.log(`post claiming | BIA ${collector1BIA}`)
-        
-        // Its not back to 1000.
-        collector1BIA = await assetKidNftContract.balanceOf(collector1.address, "0")
-        assert.equal(collector1BIA, 1000 )
-        
 
+        // Its not back to 1000.
+        collector1BIA = await assetKidNftContract.balanceOf(
+            collector1.address,
+            hexId
+        )
+        assert.equal(collector1BIA, 1000)
     })
 
-    // it("Gallery Approves: SFT recorded", async function(){
-
-    // })
-
-    // it("Gallery Approves: BIA recorded", async function(){
-        
-    // })
+    
 })
-
-

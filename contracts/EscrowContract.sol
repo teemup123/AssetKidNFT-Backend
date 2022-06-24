@@ -141,7 +141,7 @@ contract EscrowContract is ERC1155Holder, Ownable {
             bool replacement,
             address replace_address,
             uint256 replace_amt
-        ) = bid ? findIndexForBid(adr, price) : findIndexForAsk(adr, price);
+        ) = findIndex(adr, price, bid);
 
         // found lowest empty place in the array.
         if (foundPlace && !replacement) {
@@ -236,133 +236,78 @@ contract EscrowContract is ERC1155Holder, Ownable {
         return (_index, _submissionExists);
     }
 
-    function findIndexForBid(address _address, uint256 _submittedBidPrice)
+    function findIndex(
+        address adr,
+        uint256 submitPrice,
+        bool bid
+    )
         internal
         view
         verifiedCollection
         returns (
-            uint8 lowest_bid_index,
-            bool found_lower_bid,
-            bool bid_replacement,
+            uint8 index,
+            bool found,
+            bool replacement,
             address replacement_address,
-            uint256 bid_refund_amt
+            uint256 refund_amt
         )
     {
-        /// this function is called to find the lowest bid offer and replacement index.
-
-        uint256 lowest_bid_price = (2**256 - 1);
-
+        uint256 ref_price = bid ? (2**256 - 1) : 0;
         for (uint8 i; i < 50; i++) {
             require(
-                _address != bid_array[i].bidderAddress,
-                "You have already submitted a bid for this token."
+                adr !=
+                    (
+                        bid
+                            ? bid_array[i].bidderAddress
+                            : ask_array[i].askerAddress
+                    ),
+                "You have already submitted a offer for this token."
             );
-
-            // If position is available, no need to replace.
-
-            if (bid_array[i].active == false) {
-                // if the position is available, no need to replace.
-                lowest_bid_index = i;
-                found_lower_bid = true;
-                bid_replacement = false;
+            if (bid ? !bid_array[i].active : !ask_array[i].active) {
+                index = i;
+                found = true;
+                replacement = false;
                 replacement_address = address(0);
+
                 return (
-                    lowest_bid_index,
-                    found_lower_bid,
-                    bid_replacement,
+                    index,
+                    found,
+                    replacement,
                     replacement_address,
-                    bid_refund_amt
+                    refund_amt
                 );
             } else if (
-                bid_array[i].active && bid_array[i].bidPrice <= lowest_bid_price
+                bid
+                    ? (bid_array[i].active &&
+                        bid_array[i].bidPrice <= ref_price)
+                    : (ask_array[i].active &&
+                        ask_array[i].askPrice >= ref_price)
             ) {
-                lowest_bid_price = bid_array[i].bidPrice;
-                lowest_bid_index = i;
+                ref_price = bid ? bid_array[i].bidPrice : ask_array[i].askPrice;
+                index = i;
             }
         }
-
-        //
-
-        if (_submittedBidPrice > bid_array[lowest_bid_index].bidPrice) {
-            found_lower_bid = true;
-            bid_replacement = true;
-            bid_refund_amt =
-                bid_array[lowest_bid_index].bidPrice *
-                bid_array[lowest_bid_index].bidAmount;
-            replacement_address = bid_array[lowest_bid_index].bidderAddress;
+        if (
+            (
+                bid
+                    ? (submitPrice > bid_array[index].bidPrice)
+                    : (submitPrice < ask_array[index].askPrice)
+            )
+        ) {
+            found = true;
+            replacement = true;
+            refund_amt = bid
+                ? (bid_array[index].bidPrice * bid_array[index].bidAmount)
+                : ask_array[index].askAmount;
+            replacement_address = bid
+                ? bid_array[index].bidderAddress
+                : ask_array[index].askerAddress;
         } else {
-            found_lower_bid = false;
-            bid_replacement = false;
+            found = false;
+            replacement = false;
         }
 
-        return (
-            lowest_bid_index,
-            found_lower_bid,
-            bid_replacement,
-            replacement_address,
-            bid_refund_amt
-        );
-    }
-
-    function findIndexForAsk(address adr, uint256 _submittedAskPrice)
-        internal
-        view
-        verifiedCollection
-        returns (
-            uint8 highest_ask_index,
-            bool found_higher_ask,
-            bool ask_replacement,
-            address replacement_address,
-            uint256 ask_replacement_amt
-        )
-    {
-        uint256 highest_ask_price = 0;
-
-        for (uint8 i; i < 50; i++) {
-            require(
-                adr != ask_array[i].askerAddress,
-                "You have already submitted a bid for this token."
-            );
-
-            if (ask_array[i].active == false) {
-                // if the position is available, no need to replace.
-                highest_ask_index = i;
-                found_higher_ask = true;
-                ask_replacement = false;
-                replacement_address = address(0);
-                return (
-                    highest_ask_index,
-                    found_higher_ask,
-                    ask_replacement,
-                    replacement_address,
-                    ask_replacement_amt
-                );
-            } else if (
-                ask_array[i].active &&
-                ask_array[i].askPrice >= highest_ask_price
-            ) {
-                highest_ask_price = ask_array[i].askPrice;
-                highest_ask_index = i;
-            }
-        }
-
-        if (_submittedAskPrice < ask_array[highest_ask_index].askPrice) {
-            found_higher_ask = true;
-            ask_replacement = true;
-            ask_replacement_amt = ask_array[highest_ask_index].askAmount;
-            replacement_address = ask_array[highest_ask_index].askerAddress;
-        } else {
-            found_higher_ask = false;
-            ask_replacement = false;
-        }
-
-        return (
-            highest_ask_index,
-            found_higher_ask,
-            ask_replacement,
-            replacement_address,
-            ask_replacement_amt
-        );
+        return (index, found, replacement, replacement_address, refund_amt);
     }
 
     function findLowestAsk()

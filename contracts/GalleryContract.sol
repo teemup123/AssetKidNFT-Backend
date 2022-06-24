@@ -236,7 +236,6 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
                 ); // this [inside may not work] works.
                 // this is 200.
                 // Cannot be called when 0th address is inputted. THIS ONLY HAS TO BE CALLED ONCE
-                
             }
         }
 
@@ -259,7 +258,8 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
 
     function claimSFT(uint256 tokenId) public {
         EscrowContract escrow_contract = getEscrowContract(tokenId);
-        (uint8 collectionState, , uint256 collectionPrice , ) = escrow_contract.getContractStatus();
+        (uint8 collectionState, , uint256 collectionPrice, ) = escrow_contract
+            .getContractStatus();
         // collection state 3 = verified : collector calling will be transferred sft
         // colelction state 2 = SUPPORT-Cancelled : collector calling will be refunded NFT that is owed
         if (collectionState == 0 || collectionState == 1) {
@@ -268,13 +268,13 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         bool verifiedState = (collectionState == uint8(3)) ? true : false;
         (, uint256 sftOwed) = escrow_contract.getYourSupportInfo(msg.sender);
 
-        // it is not transfering the bia back to collector 
+        // it is not transfering the bia back to collector
 
         NFT_CONTRACT.safeTransferFrom(
             address(escrow_contract),
             msg.sender,
             verifiedState ? tokenId : 0,
-            verifiedState ? sftOwed : sftOwed * collectionPrice, 
+            verifiedState ? sftOwed : sftOwed * collectionPrice,
             ""
         );
 
@@ -341,7 +341,9 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             cancel ? address(escrow_contract) : msg.sender,
             cancel ? msg.sender : address(escrow_contract),
             tokenId,
-            cancel ? NFT_CONTRACT.balanceOf(address(escrow_contract), tokenId) :  amount,
+            cancel
+                ? NFT_CONTRACT.balanceOf(address(escrow_contract), tokenId)
+                : amount,
             ""
         );
 
@@ -609,7 +611,11 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             if (counterAmount > amount) {
                 // if amount is less than counterAmount, already transfer, just reconcile
                 uint256 newCounterAmt = counterAmount - amount;
-                escrow_contract.reconcileAmount(newCounterAmt, counterIndex, bid);
+                escrow_contract.reconcileAmount(
+                    newCounterAmt,
+                    counterIndex,
+                    bid
+                );
                 break;
             }
             // amount more than counterAtmount, reconcile 0 for counterAmt
@@ -624,9 +630,12 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     {
         EscrowContract escrow_contract = getEscrowContract(tokenId);
         for (uint8 i = 0; i < 50; i++) {
-            (address refAddress, , uint256 refundAmount, bool active) = bid
-                ? escrow_contract.getBidArrayInfo(i)
-                : escrow_contract.getAskArrayInfo(i);
+            (
+                address refAddress,
+                ,
+                uint256 refundAmount,
+                bool active
+            ) = escrow_contract.getArrayInfo(i, bid);
 
             if (refAddress == msg.sender && active) {
                 escrow_contract.recordBidAsk(msg.sender, 0, 0, true, i, bid);
@@ -688,7 +697,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         bool cancel,
         uint8 cancelIndex,
         bool bid
-    ) internal {
+    ) internal { // pretty sure this can be moved to NFT contract
         EscrowContract escrow_contract = getEscrowContract(_tokenId);
 
         (
@@ -744,11 +753,11 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     {
         // thid function finds lowest ask and highest bid then returns the information
         EscrowContract escrow_contract = getEscrowContract(tokenId);
-        (counterIndex, counterFound) = escrow_contract.findHighestBidLowestAsk(bid ? false : true);
+        (counterIndex, counterFound) = escrow_contract.findHighestBidLowestAsk(
+            bid ? false : true
+        );
         if (counterFound) {
-            (counterAddress, counterPrice, counterAmount, ) = bid
-                ? escrow_contract.getAskArrayInfo(counterIndex)
-                : escrow_contract.getBidArrayInfo(counterIndex);
+            (counterAddress, counterPrice, counterAmount, ) = escrow_contract.getArrayInfo(counterIndex, bid ? false : true);
         }
 
         return (

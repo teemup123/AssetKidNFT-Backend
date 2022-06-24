@@ -786,8 +786,8 @@ describe("Testing Escrow Features", function () {
                 .connect(collector1)
                 .submitOffer(tokenId, bid_amount, bid_price, true)
 
-            let bidInfo = await escrowContract.getBidArrayInfo(0)
-            assert.equal(bidInfo.bidderAddress, collector1.address)
+            let bidInfo = await escrowContract.getArrayInfo(0, true)
+            assert.equal(bidInfo.adr, collector1.address)
         })
 
         it("Offer submission approve with enough SFT and approval", async function () {
@@ -800,8 +800,8 @@ describe("Testing Escrow Features", function () {
                 .connect(creator)
                 .submitOffer(tokenId, ask_amount, ask_price, false)
 
-            let askInfo = await escrowContract.getAskArrayInfo(0)
-            assert.equal(askInfo.askerAddress, creator.address)
+            let askInfo = await escrowContract.getArrayInfo(0, false)
+            assert.equal(askInfo.adr, creator.address)
         })
 
         it("Escrow contract accurately records bid information", async function () {
@@ -824,10 +824,10 @@ describe("Testing Escrow Features", function () {
                 .connect(collector1)
                 .submitOffer(tokenId, bid_amount, bid_price, true)
 
-            let bidInfo = await escrowContract.getBidArrayInfo(0)
-            assert.equal(bidInfo.bidderAddress, collector1.address)
-            assert.equal(bidInfo.bidPrice, bid_price)
-            assert.equal(bidInfo.bidAmount, bid_amount)
+            let bidInfo = await escrowContract.getArrayInfo(0, true)
+            assert.equal(bidInfo.adr, collector1.address)
+            assert.equal(bidInfo.price, bid_price)
+            assert.equal(bidInfo.amount, bid_amount)
             assert.equal(bidInfo.active, true)
         })
 
@@ -841,10 +841,10 @@ describe("Testing Escrow Features", function () {
                 .connect(creator)
                 .submitOffer(tokenId, bid_amount, bid_price, false)
 
-            let askInfo = await escrowContract.getAskArrayInfo(0)
-            assert.equal(askInfo.askerAddress, creator.address)
-            assert.equal(askInfo.askPrice, ask_price)
-            assert.equal(askInfo.askAmount, ask_amount)
+            let askInfo = await escrowContract.getArrayInfo(0, false)
+            assert.equal(askInfo.adr, creator.address)
+            assert.equal(askInfo.price, ask_price)
+            assert.equal(askInfo.amount, ask_amount)
             assert.equal(askInfo.active, true)
         })
     })
@@ -1233,7 +1233,7 @@ describe("Testing Escrow Features", function () {
 
             //bid difference = 5BIA/SFT * (20-10)SFT = 50 BIA
 
-            offerInfo = await escrowContract.getAskArrayInfo(0)
+            offerInfo = await escrowContract.getArrayInfo(0, false)
 
             assert.equal(offerInfo[0], creator.address)
             assert.equal(offerInfo[1], offer_price)
@@ -1270,7 +1270,7 @@ describe("Testing Escrow Features", function () {
 
             //bid difference = 5BIA/SFT * (20-10)SFT = 50 BIA
 
-            bidInfo = await escrowContract.getBidArrayInfo(0)
+            bidInfo = await escrowContract.getArrayInfo(0, true)
 
             assert.equal(bidInfo[0], collector1.address)
             assert.equal(bidInfo[1], bid_price)
@@ -1412,7 +1412,7 @@ describe("Bid Array Overflow", function () {
         await galleryContract
             .connect(collector1)
             .submitOffer(2, collctor1Amount, collector1Price, true)
-        bidArray49 = await escrowContract.getBidArrayInfo(49)
+        bidArray49 = await escrowContract.getArrayInfo(49, true)
 
         // escrow recorded accurately
         assert.equal(bidArray49[0], collector1.address)
@@ -1569,7 +1569,7 @@ describe("Ask Array Overflow", function () {
         await galleryContract
             .connect(collector1)
             .submitOffer(2, collctor1Amount, collector1Price, false)
-        bidArray49 = await escrowContract.getAskArrayInfo(49)
+        bidArray49 = await escrowContract.getArrayInfo(49, false)
 
         // escrow recorded accurately
         assert.equal(bidArray49[0], collector1.address)

@@ -291,7 +291,7 @@ contract EscrowContract is ERC1155Holder, Ownable {
 
         return (index, found, replacement, replacement_address, refund_amt);
     }
-    
+
     function findHighestBidLowestAsk(bool bid)
         public
         view
@@ -331,41 +331,26 @@ contract EscrowContract is ERC1155Holder, Ownable {
         }
     }
 
-    //
-    function getAskArrayInfo(uint8 _index)
+    function getArrayInfo(uint8 _index, bool bid)
         public
         view
         verifiedCollection
         returns (
-            address askerAddress,
-            uint256 askPrice,
-            uint256 askAmount,
+            address adr,
+            uint256 price,
+            uint256 amount,
             bool active
         )
     {
-        askerAddress = ask_array[_index].askerAddress;
-        askPrice = ask_array[_index].askPrice;
-        askAmount = ask_array[_index].askAmount;
-        active = ask_array[_index].active;
-        return (askerAddress, askPrice, askAmount, active);
-    }
-
-    function getBidArrayInfo(uint8 _index)
-        public
-        view
-        verifiedCollection
-        returns (
-            address bidderAddress,
-            uint256 bidPrice,
-            uint256 bidAmount,
-            bool active
-        )
-    {
-        bidderAddress = bid_array[_index].bidderAddress;
-        bidPrice = bid_array[_index].bidPrice;
-        bidAmount = bid_array[_index].bidAmount;
-        active = bid_array[_index].active;
-        return (bidderAddress, bidPrice, bidAmount, active);
+        adr = bid
+            ? bid_array[_index].bidderAddress
+            : ask_array[_index].askerAddress;
+        price = bid ? bid_array[_index].bidPrice : ask_array[_index].askPrice;
+        amount = bid
+            ? bid_array[_index].bidAmount
+            : ask_array[_index].askAmount;
+        active = bid ? bid_array[_index].active : ask_array[_index].active;
+        return (adr, price, amount, active);
     }
 
     function verifyCollection() external onlyOwner {

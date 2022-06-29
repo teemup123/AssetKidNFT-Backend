@@ -538,10 +538,15 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             _collectionId
         ];
 
-        (uint16 submitToExchange, uint16 exchangeToSubmit) = getExchangeRate(
-            _tokenIdSubmit,
-            _tokenIdExchange
-        );
+        (
+            uint16 submitToExchange,
+            uint16 exchangeToSubmit
+        ) = DeployEscrowContract.getExchangeRate(
+                _tokenIdSubmit,
+                _tokenIdExchange,
+                address(this)
+            );
+            
         if (_tokenIdSubmitAmt % submitToExchange != 0)
             revert GalleryContract__SubmissionError(); //make sure that the submission amt is a multiple of the exchange rate
 

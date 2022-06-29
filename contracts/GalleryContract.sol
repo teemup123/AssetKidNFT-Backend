@@ -151,7 +151,8 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             COLLECTIONTYPE.BIA,
             address(this)
         );
-        approveCollectionId(uint256(0));
+        address2UnapprovedCollection[address(this)] -= 1;
+        collectionId2galleryApproval[0] = true;
 
         mapTokenIdsAndEscrow(
             collectionIdCounter,
@@ -167,7 +168,8 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             address(this)
         );
 
-        approveCollectionId(uint256(1));
+        address2UnapprovedCollection[address(this)] -= 1;
+        collectionId2galleryApproval[1] = true;
     }
 
     //// Receive
@@ -211,8 +213,8 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     function approveCollectionId(uint256 _tokenId) public onlyOwner {
         // This function will approve the collection Id after item is verified by the gallery.
 
-        uint256[10] memory otherTokenIds = getOtherTokenInCollection(
-            tokenId2CollectionId[_tokenId]
+        uint256[10] memory otherTokenIds = DeployEscrowContract.getOtherTokenInCollection(
+            tokenId2CollectionId[_tokenId], _tokenId, TOKEN_ID_COUNTER, address(this)
         );
 
         address creatorAddress = collectionId2CreatorAddress[
@@ -826,40 +828,6 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             collectionId2CollectType[tokenId2CollectionId[_tokenId]],
             collectionId2CreatorAddress[tokenId2CollectionId[_tokenId]]
         );
-    }
-
-    function getOtherTokenInCollection(uint256 _tokenId)
-        public
-        view
-        returns (uint256[10] memory otherTokenIds)
-    {
-        // Both create token functions create token consecutively -> query
-        uint8 indexReturn;
-        uint256 guessedTokenId;
-        for (int256 i = -10; i < 10; i++) {
-            if ((int256(_tokenId) + i) < 0) {
-                // if any calculated tokenId <0; just ignore it.
-                continue;
-            }
-            guessedTokenId = uint256(int256(_tokenId) + i);
-
-            if (guessedTokenId >= TOKEN_ID_COUNTER) {
-                break;
-            }
-
-            (uint256 CollectionId, , , , , ) = getTokenInfo(
-                uint256(guessedTokenId)
-            );
-
-            // tokenId + 1 does not exist -> revert
-
-            if (CollectionId == tokenId2CollectionId[_tokenId]) {
-                otherTokenIds[indexReturn] = _tokenId;
-                indexReturn += 1;
-            }
-        }
-
-        return (otherTokenIds);
     }
 
     function getEscrowContract(uint256 _tokenId)

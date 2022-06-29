@@ -119,13 +119,14 @@ library DeployEscrowContract {
                 break;
             }
 
-            (uint256 guessCollectionId, , , , , ) = galleryContract
-                .getTokenInfo(uint256(guessedTokenId));
+            (uint256 CollectionId, , , , , ) = galleryContract.getTokenInfo(
+                uint256(guessedTokenId)
+            );
 
             // tokenId + 1 does not exist -> revert
 
-            if (guessCollectionId == mappedCollectionId) {
-                otherTokenIds[indexReturn] = guessedTokenId;
+            if (CollectionId == mappedCollectionId) {
+                otherTokenIds[indexReturn] = _tokenId;
                 indexReturn += 1;
             }
         }

@@ -95,7 +95,7 @@ library DeployEscrowContract {
 
         return ((submitToExchange, exchangeToSubmit));
     }
-
+    
     function getOtherTokenInCollection(
         uint256 mappedCollectionId,
         uint256 _tokenId,
@@ -126,7 +126,7 @@ library DeployEscrowContract {
             // tokenId + 1 does not exist -> revert
 
             if (CollectionId == mappedCollectionId) {
-                otherTokenIds[indexReturn] = _tokenId;
+                otherTokenIds[indexReturn] = guessedTokenId; // should be guessedTokenId 
                 indexReturn += 1;
             }
         }

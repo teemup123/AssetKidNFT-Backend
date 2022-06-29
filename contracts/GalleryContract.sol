@@ -574,7 +574,10 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             uint256 counterPrice,
             uint256 counterAmount,
 
-        ) = getCounterPartyInfo(bid, tokenId);
+        ) = DeployEscrowContract.getCounterPartyInfo(
+                    bid,
+                    tokenId2EscrowContract[tokenId]
+                );
 
         EscrowContract escrow_contract = getEscrowContract(tokenId);
 
@@ -614,7 +617,10 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
                 uint256 counterPrice,
                 uint256 counterAmount,
                 bool counterFound
-            ) = getCounterPartyInfo(bid, tokenId);
+            ) = DeployEscrowContract.getCounterPartyInfo(
+                    bid,
+                    tokenId2EscrowContract[tokenId]
+                );
 
             // if counter party not available (no highest bid or lowest ask) -> transfer asset to escrow and break
             if (
@@ -763,35 +769,35 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         return (ASSET_KID_NFT_ADDRESS);
     }
 
-    function getCounterPartyInfo(bool bid, uint256 tokenId)
-        internal
-        view
-        returns (
-            uint8 counterIndex,
-            address counterAddress,
-            uint256 counterPrice,
-            uint256 counterAmount,
-            bool counterFound
-        )
-    {
-        // thid function finds lowest ask and highest bid then returns the information
-        EscrowContract escrow_contract = getEscrowContract(tokenId);
-        (counterIndex, counterFound) = escrow_contract.findHighestBidLowestAsk(
-            bid ? false : true
-        );
-        if (counterFound) {
-            (counterAddress, counterPrice, counterAmount, ) = escrow_contract
-                .getArrayInfo(counterIndex, bid ? false : true);
-        }
+    // function getCounterPartyInfo(bool bid, uint256 tokenId)
+    //     internal
+    //     view
+    //     returns (
+    //         uint8 counterIndex,
+    //         address counterAddress,
+    //         uint256 counterPrice,
+    //         uint256 counterAmount,
+    //         bool counterFound
+    //     )
+    // {
+    //     // thid function finds lowest ask and highest bid then returns the information
+    //     EscrowContract escrow_contract = getEscrowContract(tokenId);
+    //     (counterIndex, counterFound) = escrow_contract.findHighestBidLowestAsk(
+    //         bid ? false : true
+    //     );
+    //     if (counterFound) {
+    //         (counterAddress, counterPrice, counterAmount, ) = escrow_contract
+    //             .getArrayInfo(counterIndex, bid ? false : true);
+    //     }
 
-        return (
-            counterIndex,
-            counterAddress,
-            counterPrice,
-            counterAmount,
-            counterFound
-        );
-    }
+    //     return (
+    //         counterIndex,
+    //         counterAddress,
+    //         counterPrice,
+    //         counterAmount,
+    //         counterFound
+    //     );
+    // }
 
     function getGalleryContractAddress()
         public

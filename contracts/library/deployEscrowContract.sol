@@ -18,7 +18,6 @@ library DeployEscrowContract {
         );
         return (address(contractDeployed));
     }
-
     // PARAMETERIZE THESE THREE FUNCTION AND MAKE SURE THE VARIABLES ALIGN
     function getCounterPartyInfo(bool bid, address escrowAddress)
         public

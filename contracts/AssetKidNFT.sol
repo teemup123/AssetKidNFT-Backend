@@ -6,10 +6,11 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./GalleryContract.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 
-contract AssetKidNFT is ERC1155, Ownable, ReentrancyGuard {
+contract AssetKidNFT is ERC1155, ERC1155Burnable, Ownable, ReentrancyGuard {
     address gallery_contract_address;
-    uint256 public constant BIA = 0x9be311107159657ffe70682e3b33dcaf994ed60bb0afd954dbdd8afa12f139e5;
+    uint256 public constant BIA = 0x17faf478985872fd7d314f5dbd6a720f87d8fedc64f6dd3e3e85382d2d465af7;
     uint256 public constant FriendsAndFam = 0x204e2560e88f1d0a68fd87ad260c282b9ad7480d8dc1158c830f3b87cf1b404d;
 
     constructor(address _galleryAddress) ERC1155("") ReentrancyGuard() {
@@ -32,9 +33,7 @@ contract AssetKidNFT is ERC1155, Ownable, ReentrancyGuard {
 
     function setApproval4Gallery() public nonReentrant {
         // this function will approve the gallery contract to manage their NFTs for trading.
-        // this function will also approve the escrow as well as the assembler contract to function.
         // any transfer will be handle by the GalleryContract,
-        // escrow and assembler function will call this function to approve gallery to transfer token on thier behalf.
         // this should be prompted when user connect their wallet to gallery. Web3 stuff probably.
 
         GalleryContract gallery_contract = GalleryContract(
@@ -43,6 +42,8 @@ contract AssetKidNFT is ERC1155, Ownable, ReentrancyGuard {
         gallery_contract.setApprovalForTrading(msg.sender);
         setApprovalForAll(gallery_contract_address, true);
     }
+
+    //function _testSetApprovalRemoveBeforeDeploy()
 
     function mutualEscrowTransfer(
         address sender,

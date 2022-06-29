@@ -934,12 +934,8 @@ describe("Testing Escrow Features", function () {
             await assetKidNftContract.connect(collector1).setApproval4Gallery()
             await galleryContract
                 .connect(owner)
-                .transferBetween(
-                    galleryContractAddress,
-                    collector1.address,
-                    0,
-                    10000
-                )
+                .fundAddress(collector1.address, 10000)
+                
 
             await galleryContract
                 .connect(collector1)
@@ -972,12 +968,7 @@ describe("Testing Escrow Features", function () {
             await assetKidNftContract.connect(collector1).setApproval4Gallery()
             await galleryContract
                 .connect(owner)
-                .transferBetween(
-                    galleryContractAddress,
-                    collector1.address,
-                    0,
-                    10000
-                )
+                .fundAddress(collector1.address, 10000)
 
             await galleryContract
                 .connect(collector1)
@@ -1018,12 +1009,7 @@ describe("Testing Escrow Features", function () {
             await assetKidNftContract.connect(collector1).setApproval4Gallery()
             await galleryContract
                 .connect(owner)
-                .transferBetween(
-                    galleryContractAddress,
-                    collector1.address,
-                    0,
-                    10000
-                )
+                .fundAddress(collector1.address, 10000)
 
             await galleryContract
                 .connect(collector1)
@@ -1064,12 +1050,7 @@ describe("Testing Escrow Features", function () {
             await assetKidNftContract.connect(collector1).setApproval4Gallery()
             await galleryContract
                 .connect(owner)
-                .transferBetween(
-                    galleryContractAddress,
-                    collector1.address,
-                    0,
-                    10000
-                )
+                .fundAddress(collector1.address, 10000)
 
             await galleryContract
                 .connect(collector1)
@@ -1107,12 +1088,7 @@ describe("Testing Escrow Features", function () {
             await assetKidNftContract.connect(collector1).setApproval4Gallery()
             await galleryContract
                 .connect(owner)
-                .transferBetween(
-                    galleryContractAddress,
-                    collector1.address,
-                    0,
-                    10000
-                )
+                .fundAddress(collector1.address, 10000)
 
             await galleryContract
                 .connect(collector1)
@@ -1154,12 +1130,7 @@ describe("Testing Escrow Features", function () {
             await assetKidNftContract.connect(collector1).setApproval4Gallery()
             await galleryContract
                 .connect(owner)
-                .transferBetween(
-                    galleryContractAddress,
-                    collector1.address,
-                    0,
-                    10000
-                )
+                .fundAddress(collector1.address, 10000)
 
             await galleryContract
                 .connect(collector1)
@@ -1196,12 +1167,7 @@ describe("Testing Escrow Features", function () {
             await assetKidNftContract.connect(collector1).setApproval4Gallery()
             await galleryContract
                 .connect(owner)
-                .transferBetween(
-                    galleryContractAddress,
-                    collector1.address,
-                    0,
-                    10000
-                )
+                .fundAddress(collector1.address, 10000)
 
             await galleryContract
                 .connect(collector1)
@@ -1228,12 +1194,7 @@ describe("Testing Escrow Features", function () {
             await assetKidNftContract.connect(collector1).setApproval4Gallery()
             await galleryContract
                 .connect(owner)
-                .transferBetween(
-                    galleryContractAddress,
-                    collector1.address,
-                    0,
-                    10000
-                )
+                .fundAddress(collector1.address, 10000)
 
             await galleryContract
                 .connect(collector1)
@@ -1272,12 +1233,7 @@ describe("Testing Escrow Features", function () {
             await assetKidNftContract.connect(collector1).setApproval4Gallery()
             await galleryContract
                 .connect(owner)
-                .transferBetween(
-                    galleryContractAddress,
-                    collector1.address,
-                    0,
-                    10000
-                )
+                .fundAddress(collector1.address, 10000)
             bid_amount = 20 // SFT
             bid_price = 5 // BIA/SFT
 
@@ -1315,12 +1271,7 @@ describe("Testing Escrow Features", function () {
             await assetKidNftContract.connect(collector1).setApproval4Gallery()
             await galleryContract
                 .connect(owner)
-                .transferBetween(
-                    galleryContractAddress,
-                    collector1.address,
-                    0,
-                    10000
-                )
+                .fundAddress(collector1.address, 10000)
 
             await galleryContract
                 .connect(collector1)
@@ -1355,12 +1306,7 @@ describe("Testing Escrow Features", function () {
             await assetKidNftContract.connect(collector1).setApproval4Gallery()
             await galleryContract
                 .connect(owner)
-                .transferBetween(
-                    galleryContractAddress,
-                    collector1.address,
-                    0,
-                    10000
-                )
+                .fundAddress(collector1.address, 10000)
 
             await galleryContract
                 .connect(collector1)
@@ -1395,12 +1341,7 @@ describe("Testing Escrow Features", function () {
             await assetKidNftContract.connect(collector1).setApproval4Gallery()
             await galleryContract
                 .connect(owner)
-                .transferBetween(
-                    galleryContractAddress,
-                    collector1.address,
-                    0,
-                    10000
-                )
+                .fundAddress(collector1.address, 10000)
 
             await galleryContract
                 .connect(collector1)
@@ -1425,12 +1366,7 @@ describe("Testing Escrow Features", function () {
             await assetKidNftContract.connect(collector1).setApproval4Gallery()
             await galleryContract
                 .connect(owner)
-                .transferBetween(
-                    galleryContractAddress,
-                    collector1.address,
-                    0,
-                    10000
-                )
+                .fundAddress(collector1.address, 10000)
 
             await galleryContract
                 .connect(collector1)
@@ -1540,12 +1476,7 @@ describe("Bid Array Overflow", function () {
             if (i == 49) {
                 await galleryContract
                     .connect(owner)
-                    .transferBetween(
-                        galleryContractAddress,
-                        lastCollector.address,
-                        0,
-                        1000
-                    )
+                    .fundAddress(lastCollector.address, 1000)
                 // Wallet submit Bid
 
                 await assetKidNftContract
@@ -1565,13 +1496,9 @@ describe("Bid Array Overflow", function () {
             )
             // Fund wallet by the owner
             await galleryContract
-                .connect(owner)
-                .transferBetween(
-                    galleryContractAddress,
-                    account.address,
-                    0,
-                    1000
-                )
+                    .connect(owner)
+                    .fundAddress(account.address, 1000)
+
 
             // Send some eth so they can interact with the system
             await owner.sendTransaction({
@@ -1591,8 +1518,8 @@ describe("Bid Array Overflow", function () {
 
     it("Submitting Higher Bid PASSES and refunded", async function () {
         await galleryContract
-            .connect(owner)
-            .transferBetween(galleryContractAddress, collector1.address, 0, 100)
+                    .connect(owner)
+                    .fundAddress(collector1.address, 100)
 
         await assetKidNftContract.connect(collector1).setApproval4Gallery()
         collector1Price = 12
@@ -1617,8 +1544,8 @@ describe("Bid Array Overflow", function () {
 
     it("Submitting Lower Bid Fails", async function () {
         await galleryContract
-            .connect(owner)
-            .transferBetween(galleryContractAddress, collector1.address, 0, 100)
+                    .connect(owner)
+                    .fundAddress(collector1.address, 100)
 
         await assetKidNftContract.connect(collector1).setApproval4Gallery()
         collector1Price = 11 // lowest price was 11
@@ -1713,15 +1640,11 @@ describe("Ask Array Overflow", function () {
 
         // Saturating ask loop.
         for (let i = 0; i < 50; i++) {
+            const token2 = "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e"
             if (i == 49) {
-                await galleryContract
-                    .connect(owner)
-                    .transferBetween(
-                        creator.address,
-                        lastCollector.address,
-                        2,
-                        1
-                    )
+                await assetKidNftContract
+                .connect(creator)
+                .safeTransferFrom(creator.address, lastCollector.address, token2, 1, "0x")
                 // Wallet submit Bid
 
                 await assetKidNftContract
@@ -1740,9 +1663,9 @@ describe("Ask Array Overflow", function () {
                 ethers.provider
             )
             // Fund wallet by the owner
-            await galleryContract
-                .connect(owner)
-                .transferBetween(creator.address, account.address, 2, 1)
+            await assetKidNftContract
+                .connect(creator)
+                .safeTransferFrom(creator.address, account.address, token2, 1, "0x")
 
             // Send some eth so they can interact with the system
             await owner.sendTransaction({
@@ -1761,9 +1684,12 @@ describe("Ask Array Overflow", function () {
     })
 
     it("Submitting Lower Ask Passes", async function () {
-        await galleryContract
-            .connect(owner)
-            .transferBetween(creator.address, collector1.address, 2, 1)
+        const token2 =
+                "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e"
+        await assetKidNftContract
+            .connect(creator)
+            .safeTransferFrom(creator.address, collector1.address, token2, 1, "0x")
+
 
         await assetKidNftContract.connect(collector1).setApproval4Gallery()
         collector1Price = 10
@@ -1789,9 +1715,12 @@ describe("Ask Array Overflow", function () {
     })
 
     it("Submitting Higher Ask Fails", async function () {
-        await galleryContract
-            .connect(owner)
-            .transferBetween(creator.address, collector1.address, 2, 1)
+        const token2 =
+                "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e"
+        await assetKidNftContract
+            .connect(creator)
+            .safeTransferFrom(creator.address, collector1.address, token2, 1, "0x")
+
 
         await assetKidNftContract.connect(collector1).setApproval4Gallery()
         collector1Price = 110 // highest price was 60+49 = 109
@@ -1860,13 +1789,8 @@ describe("Support Functions", function () {
         )
 
         await galleryContract
-            .connect(owner)
-            .transferBetween(
-                galleryContract.address,
-                collector1.address,
-                0,
-                1000
-            )
+                    .connect(owner)
+                    .fundAddress(collector1.address, 1000)
 
         await assetKidNftContract.connect(collector1).setApproval4Gallery()
 

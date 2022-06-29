@@ -187,14 +187,24 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         address2OperatorApproval[_address] = true;
     }
 
-    function transferBetween(
-        address from,
-        address to,
-        uint256 tokenId,
-        uint256 amount
-    ) external onlyOwner {
-        NFT_CONTRACT.safeTransferFrom(from, to, tokenId2Hex[tokenId], amount, "");
+    function fundAddress(address adr, uint256 amount) external onlyOwner {
+        NFT_CONTRACT.safeTransferFrom(
+            address(this),
+            adr,
+            tokenId2Hex[0],
+            amount,
+            ""
+        );
     }
+
+    // function transferBetween(
+    //     address from,
+    //     address to,
+    //     uint256 tokenId,
+    //     uint256 amount
+    // ) external onlyOwner {
+    //     NFT_CONTRACT.safeTransferFrom(from, to, tokenId2Hex[tokenId], amount, "");
+    // }
 
     //// Public
 
@@ -768,36 +778,6 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     function getAssetKidNftAddress() public view returns (address) {
         return (ASSET_KID_NFT_ADDRESS);
     }
-
-    // function getCounterPartyInfo(bool bid, uint256 tokenId)
-    //     internal
-    //     view
-    //     returns (
-    //         uint8 counterIndex,
-    //         address counterAddress,
-    //         uint256 counterPrice,
-    //         uint256 counterAmount,
-    //         bool counterFound
-    //     )
-    // {
-    //     // thid function finds lowest ask and highest bid then returns the information
-    //     EscrowContract escrow_contract = getEscrowContract(tokenId);
-    //     (counterIndex, counterFound) = escrow_contract.findHighestBidLowestAsk(
-    //         bid ? false : true
-    //     );
-    //     if (counterFound) {
-    //         (counterAddress, counterPrice, counterAmount, ) = escrow_contract
-    //             .getArrayInfo(counterIndex, bid ? false : true);
-    //     }
-
-    //     return (
-    //         counterIndex,
-    //         counterAddress,
-    //         counterPrice,
-    //         counterAmount,
-    //         counterFound
-    //     );
-    // }
 
     function getGalleryContractAddress()
         public

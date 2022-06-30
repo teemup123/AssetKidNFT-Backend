@@ -1927,7 +1927,12 @@ describe("Support Functions", function () {
         biaInEscrow = await assetKidNftContract
             .connect(owner)
             .balanceOf(escrowContract.address, hexId)
-        //console.log(`bia in escrow after collection approves ${biaInEscrow}`)
+        
+        await galleryContract.connect(creator).claimBIA(2)
+        creatorBia = await assetKidNftContract
+            .connect(creator)
+            .balanceOf(creator.address, hexId)
+        // console.log(`bia in escrow after collection approves ${biaInEscrow}`)
         // supportInfo = await escrowContract.connect(creator).getYourSupportInfo(creator.address)
         // escrowStatus = await escrowContract.connect(creator).getContractStatus()
         // console.log(`support info ${supportInfo}`)

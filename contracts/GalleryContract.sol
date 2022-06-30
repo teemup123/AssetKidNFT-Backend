@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./AssetKidNFT.sol";
 import "./EscrowContract.sol";
 import "./AssemblerContract.sol";
+import "./MappingContract.sol";
 
 // Error Codes
 error GalleryContract__CollectionIdAlreadyApproved();
@@ -93,6 +94,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     uint256 public collectionIdCounter = 0;
     uint256 public TOKEN_ID_COUNTER = 0;
     address public immutable ASSET_KID_NFT_ADDRESS;
+    address public immutable MAPPING_CONTRACT_ADDRESS;
     AssetKidNFT public NFT_CONTRACT;
 
     // Events
@@ -137,6 +139,10 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         ); //deploy nft_management contract right off the bat.
         ASSET_KID_NFT_ADDRESS = assetKidNftAddress;
         NFT_CONTRACT = AssetKidNFT(assetKidNftAddress);
+
+        MAPPING_CONTRACT_ADDRESS = DeployAssetKidNFT.deployMapper(
+            address(this)
+        );
 
         mapTokenIdsAndEscrow(
             collectionIdCounter,

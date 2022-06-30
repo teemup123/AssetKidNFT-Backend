@@ -805,7 +805,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             uint16 PercentRep,
             address EscrowContractAddress,
             address AssemblerContractAddress,
-            COLLECTIONTYPE CollectionType,
+            uint8 CollectionType,
             address CreatorAddress
         )
     {
@@ -817,7 +817,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             tokenId2PercentRep[_tokenId],
             tokenId2EscrowContract[_tokenId],
             collectionId2AssemblerContract[tokenId2CollectionId[_tokenId]],
-            collectionId2CollectType[tokenId2CollectionId[_tokenId]],
+            uint8(collectionId2CollectType[tokenId2CollectionId[_tokenId]]),
             collectionId2CreatorAddress[tokenId2CollectionId[_tokenId]]
         );
     }
@@ -852,43 +852,18 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         return (NFT_CONTRACT.balanceOf(_address, tokenId));
     }
 
-    function getExchangeRate(uint256 _tokenIdSubmit, uint256 _tokenIdExchange)
-        internal
-        view
-        returns (uint16 submitToExchange, uint16 exchangeToSubmit)
-    {
-        (
-            uint256 submittedCollectionId,
-            uint16 submittedPercent,
-            ,
-            ,
-            ,
-
-        ) = getTokenInfo(_tokenIdSubmit);
-        (
-            uint256 exchangedCollectionId,
-            uint16 exchangedPercent,
-            ,
-            ,
-            ,
-
-        ) = getTokenInfo(_tokenIdExchange);
-
-        if (submittedCollectionId != exchangedCollectionId)
-            revert GalleryContract__SubmissionError();
-
-        if (_tokenIdSubmit < _tokenIdExchange) {
-            //Exchange up
-
-            submitToExchange = exchangedPercent / submittedPercent;
-            exchangeToSubmit = 1;
-        } else if (_tokenIdSubmit > _tokenIdExchange) {
-            //Exchange down
-
-            exchangeToSubmit = submittedPercent / exchangedPercent;
-            submitToExchange = 1;
-        }
-
-        return (submitToExchange, exchangeToSubmit);
+    function burnTokenId(uint256 tokenId) external {
+        // if (msg.sender != galleryContract2){}
+        tokenIdExist[tokenId] = false;
     }
+    
+    function burnCollectionId(uint256 collectionId) external {
+        // if (msg.sender != galleryContract2){}
+        collectionIdExist[collectionId] = false;
+    }
+
+    function getTokenIdCounter() public view returns(uint256){
+        return TOKEN_ID_COUNTER;
+    }
+
 }

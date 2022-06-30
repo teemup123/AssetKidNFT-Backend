@@ -6,8 +6,9 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./GalleryContract.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 
-contract AssetKidNFT is ERC1155, Ownable, ReentrancyGuard {
+contract AssetKidNFT is ERC1155, ERC1155Burnable, Ownable, ReentrancyGuard {
     address gallery_contract_address;
     uint256 public constant BIA = 0x9be311107159657ffe70682e3b33dcaf994ed60bb0afd954dbdd8afa12f139e5;
     uint256 public constant FriendsAndFam = 0x204e2560e88f1d0a68fd87ad260c282b9ad7480d8dc1158c830f3b87cf1b404d;

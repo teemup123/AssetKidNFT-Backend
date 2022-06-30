@@ -199,19 +199,17 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         );
     }
 
-    // function transferBetween(
-    //     address from,
-    //     address to,
-    //     uint256 tokenId,
-    //     uint256 amount
-    // ) external onlyOwner {
-    //     NFT_CONTRACT.safeTransferFrom(from, to, tokenId2Hex[tokenId], amount, "");
-    // }
-
     //// Public
 
     function approveCollectionId(uint256 _tokenId) public onlyOwner {
         // This function will approve the collection Id after item is verified by the gallery.
+
+        EscrowContract commercialEscrow;
+        uint256 biaSupported;
+
+        address creatorAddress = collectionId2CreatorAddress[
+            tokenId2CollectionId[_tokenId]
+        ];
 
         uint256[10] memory otherTokenIds = DeployEscrowContract
             .getOtherTokenInCollection(
@@ -221,75 +219,71 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
                 address(this)
             );
 
-        address creatorAddress = collectionId2CreatorAddress[
-            tokenId2CollectionId[_tokenId]
-        ];
-
-        EscrowContract escrowContract;
-        uint256 biaSupported;
-        //Checking condition for each Id
-        for (uint256 i = 0; i < 10; i++) {
-            // Check condition for each Id
-            if (
-                collectionId2galleryApproval[
-                    tokenId2CollectionId[otherTokenIds[i]]
-                ] &&
-                tokenId2CollectionId[_tokenId] ==
-                tokenId2CollectionId[otherTokenIds[i]]
-            ) {
-                revert GalleryContract__CollectionIdAlreadyApproved();
-            }
-
-            // Approving each escrow contract
-
+        for (uint256 i; i < 10; i++) {
             EscrowContract _escrowContract = EscrowContract(
                 tokenId2EscrowContract[otherTokenIds[i]]
             );
+            // Verfifying each contract
+            _escrowContract.verifyCollection();
+            // finding which contract is the commercial contract
 
-            if (address(_escrowContract) != address(0)) {
-                // Transfer supported BIA from escrow contract if NOT zero address
-                escrowContract = _escrowContract;
-                escrowContract.verifyCollection();
-                (biaSupported, ) = escrowContract.getYourSupportInfo(
+            (, bool commercializable, , ) = _escrowContract.getContractStatus();
+            // get biaSupported and commercial Escrow contract
+            if (commercializable) {
+                commercialEscrow = _escrowContract;
+                (biaSupported, ) = _escrowContract.getYourSupportInfo(
                     creatorAddress
-                ); // this [inside may not work] works.
-                // this is 200.
-                // Cannot be called when 0th address is inputted. THIS ONLY HAS TO BE CALLED ONCE
+                );
+                break;
+            }
+
+            if (otherTokenIds[i + 1] == 0) {
+                break;
             }
         }
+        collectionId2galleryApproval[tokenId2CollectionId[_tokenId]] = true;
+    }
 
-        if (address(escrowContract) != address(0)) {
-            NFT_CONTRACT.safeTransferFrom(
-                address(escrowContract),
-                creatorAddress,
-                tokenId2Hex[0],
-                biaSupported,
-                ""
-            );
+    function claimBIA(uint256 tokenId) public {
+        address creatorAddress = collectionId2CreatorAddress[
+            tokenId2CollectionId[tokenId]
+        ];
+        if (creatorAddress != msg.sender) {
+            revert GalleryContract__NotCreator();
         }
-
-        // Approving the collection Id ONCE.
-        address2UnapprovedCollection[creatorAddress] -= 1;
-        collectionId2galleryApproval[
-            tokenId2CollectionId[otherTokenIds[0]]
-        ] = true;
+        EscrowContract commercialEscrow = EscrowContract(
+            tokenId2EscrowContract[tokenId]
+        );
+        (uint256 biaSupported, ) = commercialEscrow.getYourSupportInfo(
+            creatorAddress
+        );
+        NFT_CONTRACT.safeTransferFrom(
+            address(commercialEscrow),
+            creatorAddress,
+            tokenId2Hex[0],
+            biaSupported,
+            ""
+        );
     }
 
     function claimSFT(uint256 tokenId) public {
-            
-        
-       
         (
             uint8 collectionState,
             uint256 collectionPrice,
             uint256 sftOwed,
             address escrowAddress
-        ) = DeployEscrowContract.claimSftHelper(tokenId, address(this), msg.sender);
+        ) = DeployEscrowContract.claimSftHelper(
+                tokenId,
+                address(this),
+                msg.sender
+            );
 
         NFT_CONTRACT.safeTransferFrom(
             escrowAddress,
             msg.sender,
-            (collectionState == uint8(3)) ? tokenId2Hex[tokenId] : tokenId2Hex[0],
+            (collectionState == uint8(3))
+                ? tokenId2Hex[tokenId]
+                : tokenId2Hex[0],
             (collectionState == uint8(3)) ? sftOwed : sftOwed * collectionPrice,
             ""
         );

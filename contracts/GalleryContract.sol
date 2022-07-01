@@ -94,6 +94,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     uint256 public TOKEN_ID_COUNTER = 0;
     address public immutable ASSET_KID_NFT_ADDRESS;
     AssetKidNFT public NFT_CONTRACT;
+    address GALLERY_2_ADDRESS; 
 
     // Events
 
@@ -844,26 +845,23 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         return (collectionId2CreatorAddress[_collectionId]);
     }
 
-    function getTokenBalance(address _address, uint256 tokenId)
-        public
-        view
-        returns (uint256)
-    {
-        return (NFT_CONTRACT.balanceOf(_address, tokenId));
-    }
-
     function burnTokenId(uint256 tokenId) external {
-        // if (msg.sender != galleryContract2){}
+        if (msg.sender != GALLERY_2_ADDRESS){}
         tokenIdExist[tokenId] = false;
     }
     
     function burnCollectionId(uint256 collectionId) external {
-        // if (msg.sender != galleryContract2){}
+        if (msg.sender != GALLERY_2_ADDRESS){}
         collectionIdExist[collectionId] = false;
     }
 
     function getTokenIdCounter() public view returns(uint256){
         return TOKEN_ID_COUNTER;
+    }
+
+    function setGallery2Address(address gallery2Address) public onlyOwner{
+        GALLERY_2_ADDRESS = gallery2Address;
+        NFT_CONTRACT.setGallery2Address(gallery2Address);
     }
 
 }

@@ -32,7 +32,7 @@ contract GalleryContract2 {
             ,
             address escrowContractAddress,
             ,
-            ,
+            uint8 collectionType,
             address creatorAddress
         ) = galleryContract.getTokenInfo(tokenId);
 
@@ -41,11 +41,18 @@ contract GalleryContract2 {
         (uint8 contractState, , , ) = escrowContract.getContractStatus();
 
         burnCollectionFilter(msg.sender, creatorAddress, contractState);
-
-        burnOtherTokensInCollection(tokenId);
-        burnCommercialToken(tokenId);
-        galleryContract.burnCollectionId(collectionId); // call to remap other collectionIdExist
-
+        if (collectionType == 1) {
+            burnSimpleCollectable(tokenId, msg.sender);
+            galleryContract.burnCollectionId(collectionId);
+            return;
+        } else if (collectionType == 2) {
+            burnTierCollectable(tokenId, msg.sender);
+            galleryContract.burnCollectionId(collectionId);
+            return;
+        } else{
+            revert GalleryContract2__SubmissionError();
+        }
+        // call to remap other collectionIdExist
     }
 
     function burnCollectionFilter(
@@ -64,7 +71,7 @@ contract GalleryContract2 {
         }
     }
 
-    function burnOtherTokensInCollection(uint256 tokenId) internal {
+    function burnSimpleCollectable(uint256 tokenId, address sender) internal {
         // get other token info
         (uint256 collectionId, , , , uint8 collectionType, ) = galleryContract
             .getTokenInfo(tokenId);
@@ -74,19 +81,19 @@ contract GalleryContract2 {
                 collectionId,
                 tokenId,
                 galleryContract.getTokenIdCounter(),
-                address(this)
+                GALLERY_CONTRACT_ADDRESS
             );
         // taking out tokenId existence
         for (uint8 i; i < 10; i++) {
-            galleryContract.burnTokenId(otherTokeIds[i]);
             //tokenIdExist[otherTokeIds[i]] = false; // has to be done regardless of simple or tier
             // burn all token in collection for simple collectable
             uint256 hexId = galleryContract.getHexId(otherTokeIds[i]);
             if (
                 collectionType == 1 //SIMPLE COLLECTABLE
             ) {
+                galleryContract.burnTokenId(otherTokeIds[i]);
                 NFT_CONTRACT.burn(
-                    msg.sender,
+                    sender,
                     hexId,
                     NFT_CONTRACT.balanceOf(msg.sender, hexId)
                 );
@@ -94,32 +101,25 @@ contract GalleryContract2 {
         }
     }
 
-    function burnCommercialToken(uint256 tokenId) internal {
-        (
-            ,
-            ,
-            address escrowContractAddress,
-            ,
-            uint8 collectionType,
-            
-        ) = galleryContract.getTokenInfo(tokenId);
+    function burnTierCollectable(uint256 tokenId, address sender) internal {
+        (, , address escrowContractAddress, , , ) = galleryContract
+            .getTokenInfo(tokenId);
 
         // Getting Escrow Contract from token info
         EscrowContract escrowContract = EscrowContract(escrowContractAddress);
-
         (, bool commercializable, , ) = escrowContract.getContractStatus();
-        if (collectionType == 2 && commercializable) {
+        if (commercializable) {
             // and commercial token
-
+            galleryContract.burnTokenId(tokenId);
             NFT_CONTRACT.burn(
-                msg.sender,
+                sender,
                 galleryContract.getHexId(tokenId),
                 NFT_CONTRACT.balanceOf(
-                    msg.sender,
+                    sender,
                     galleryContract.getHexId(tokenId)
                 )
             ); // if collection not verified, assembly cannot exchange token !
-        } else if (collectionType == 2) {
+        } else {
             revert GalleryContract2__SubmissionError();
         }
     }

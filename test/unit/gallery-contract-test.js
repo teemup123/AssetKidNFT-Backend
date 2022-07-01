@@ -122,16 +122,16 @@ describe("Testing Gallery Contract Features", function () {
                 galleryContractAddress
             )
         })
-        it("Get Token Bal.", async function () {
-            assert.equal(
-                await String(
-                    galleryContract.getTokenBalance(galleryContractAddress, "0")
-                ),
-                await String(
-                    assetKidNftContract.balanceOf(galleryContractAddress, "0")
-                )
-            )
-        })
+        // it("Get Token Bal.", async function () {
+        //     assert.equal(
+        //         await String(
+        //             galleryContract.getTokenBalance(galleryContractAddress, "0")
+        //         ),
+        //         await String(
+        //             assetKidNftContract.balanceOf(galleryContractAddress, "0")
+        //         )
+        //     )
+        // })
         it("Get unapproved collections amount", async function () {
             assert.equal(
                 await galleryContract
@@ -2253,7 +2253,181 @@ describe("Support Functions", function () {
             hexId
         )
         assert.equal(collector1BIA, 1000)
+    })    
+})
+
+describe("Testing Collection Burning", function () {
+    let galleryContractFactory,
+        galleryContract,
+        galleryContractAddress,
+        assetKidNftAddress,
+        assetKidNftContract,
+        hexArray,
+        owner,
+        creator1,
+        creator2,
+        gallery2Contract
+
+    beforeEach(async () => {
+        ;[owner, creator1, creator2] = await ethers.getSigners()
+        hexArray = [
+            "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e",
+            "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678",
+            "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519",
+            "0xc651779b785af9d19d796342aadcd88cf642c1b11df85e415a3842ed26138aca",
+            "0x008e6b3b7108e5c8d2a4f5f4286202ad9a74b3a84b7a5804cdd10c6d302338b8",
+            "0x5ed8a07aa2a501489ab54d3e019df507c27a01ae1dacc11fe100eaa058725861",
+            "0x3b5b8ca65757c0ce22777ffe9b13063098d90a65a252847bcee814b355336b13",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+        ]
+        libraries = await deployLib()
+        galleryContractFactory = await ethers.getContractFactory(
+            "GalleryContract",
+            {
+                libraries: {
+                    DeployAssemblerContract: String(
+                        libraries.assemblerLibContract.address
+                    ),
+                    DeployAssetKidNFT: String(libraries.assetKidNFTLib.address),
+                    DeployEscrowContract: String(libraries.escrowLib.address),
+                },
+            }
+        )
+        galleryContract = await galleryContractFactory.deploy()
+
+        await galleryContract.deployed()
+        galleryContractAddress = await galleryContract.address
+
+        assetKidNftAddress = await galleryContract.getAssetKidNftAddress()
+        assetKidNftContract = await ethers.getContractAt(
+            "AssetKidNFT",
+            assetKidNftAddress
+        )
+
+        // CREATE SIMPLE COLLECTABLE BY CREATOR 1
+        _quantity = [30, 6, 4, 0, 0, 0, 0, 0, 0, 0]
+        _percentage = [10, 50, 100, 0, 0, 0, 0, 0, 0, 0]
+        await galleryContract
+            .connect(creator1)
+            .createSimpleCollectable(_quantity, _percentage, hexArray)
+        await assetKidNftContract.connect(creator1).setApproval4Gallery()
+
+        // CREATE TIER COLLECTABLE BY CREATOR 2
+
+        _baseTier = 10
+        _subsequentTier = [50, 250, 500, 0, 0, 0, 0, 0, 0, 0]
+
+        hexArray = [
+            "0x60499e86da3fd79d954e2fc75e1400107225cbd65d63521971da7a8bd21773c4",
+            "0x67449445f9ebc59fc33411d52c5cd33dcfcfb3ba7a5f09f8ca2fbac255265a36",
+            "0xc61c6eb831860a13676322e2dd86da29cfd298804852c8d4b5c652756b98e24b",
+            "0xee4e7bf0a16570a84f7a9f3a309b42ae34a91493ff28696fc87e28bd1a64b236",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+        ]
+
+        await galleryContract
+            .connect(creator2)
+            .createTierCollectable(_baseTier, _subsequentTier, hexArray)
+        await assetKidNftContract.connect(creator2).setApproval4Gallery()
+
+        // Deploying GalleryContract2
+        gallery2ContractFactory = await ethers.getContractFactory(
+            "GalleryContract2",
+            {
+                libraries: {
+                    DeployEscrowContract: String(libraries.escrowLib.address),
+                },
+            }
+            
+        )
+        gallery2Contract = await gallery2ContractFactory.deploy(galleryContractAddress, assetKidNftAddress)
+        await gallery2Contract.deployed()
+        gallery2ContractAddress = await gallery2Contract.address
+
+        // Setting GalleryContract2Address
+        await galleryContract.connect(owner).setGallery2Address(gallery2ContractAddress)
+        await assetKidNftContract.connect(creator1).setApproval4Gallery2()
+        await assetKidNftContract.connect(creator2).setApproval4Gallery2()
+
+
+        
+    })
+    it("Burning Simple Collectable", async function () {
+        // otherTokeIds = await galleryContract.getOtherToken(2)
+        // console.log(otherTokeIds)
+        await gallery2Contract.connect(creator1).burnCollection(3)
+
+        assert.equal(
+            await assetKidNftContract.balanceOf(
+                creator1.address,
+                "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e"
+            ),
+            0
+        )
+        assert.equal(
+            await assetKidNftContract.balanceOf(
+                creator1.address,
+                "0x6c4d63bf70041bfeffe7c250447170c53a081569e4ad44c3034c5f5023b35678"
+            ),
+            0
+        )
+        assert.equal(
+            await assetKidNftContract.balanceOf(
+                creator1.address,
+                "0x1d40787e76ef7570c8fc88a03ad293aa4d9949a5744c3cf16b24e68034cbc519"
+            ),
+            0
+        )
     })
 
-    
+    it("Burning Simple Collectable - Checking tokenInfo", async function () {
+        // otherTokeIds = await galleryContract.getOtherToken(2)
+        // console.log(otherTokeIds)
+        await gallery2Contract.connect(creator1).burnCollection(3)
+
+        await expect(galleryContract.getTokenInfo(3)).to.be.reverted
+    })
+
+    it("Burning Tier Collectable", async function () {
+        // otherTokeIds = await galleryContract.getOtherToken(2)
+        // console.log(otherTokeIds)
+        await gallery2Contract.connect(creator2).burnCollection(5)
+
+        assert.equal(
+            await assetKidNftContract.balanceOf(
+                creator2.address,
+                "0x60499e86da3fd79d954e2fc75e1400107225cbd65d63521971da7a8bd21773c4"
+            ),
+            0
+        )
+        assert.equal(
+            await assetKidNftContract.balanceOf(
+                creator2.address,
+                "0x67449445f9ebc59fc33411d52c5cd33dcfcfb3ba7a5f09f8ca2fbac255265a36"
+            ),
+            0
+        )
+        assert.equal(
+            await assetKidNftContract.balanceOf(
+                creator2.address,
+                "0xc61c6eb831860a13676322e2dd86da29cfd298804852c8d4b5c652756b98e24b"
+            ),
+            0
+        )
+    })
+
+    it("Burning Tier Collectable - Checking tokenInfo", async function () {
+        // otherTokeIds = await galleryContract.getOtherToken(2)
+        // console.log(otherTokeIds)
+        await gallery2Contract.connect(creator2).burnCollection(5)
+
+        await expect(galleryContract.getTokenInfo(5)).to.be.reverted
+    })
 })

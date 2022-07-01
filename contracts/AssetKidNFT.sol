@@ -12,6 +12,7 @@ contract AssetKidNFT is ERC1155, ERC1155Burnable, Ownable, ReentrancyGuard {
     address gallery_contract_address;
     uint256 public constant BIA = 0x9be311107159657ffe70682e3b33dcaf994ed60bb0afd954dbdd8afa12f139e5;
     uint256 public constant FriendsAndFam = 0x204e2560e88f1d0a68fd87ad260c282b9ad7480d8dc1158c830f3b87cf1b404d;
+    address GALLERY_2_ADDRESS;
 
     constructor(address _galleryAddress) ERC1155("") ReentrancyGuard() {
         gallery_contract_address = _galleryAddress; //specify for approveforall function
@@ -43,6 +44,14 @@ contract AssetKidNFT is ERC1155, ERC1155Burnable, Ownable, ReentrancyGuard {
         );
         gallery_contract.setApprovalForTrading(msg.sender);
         setApprovalForAll(gallery_contract_address, true);
+    }
+    function setApproval4Gallery2() public nonReentrant {
+        // this function will approve the gallery contract to manage their NFTs for trading.
+        // this function will also approve the escrow as well as the assembler contract to function.
+        // any transfer will be handle by the GalleryContract,
+        // escrow and assembler function will call this function to approve gallery to transfer token on thier behalf.
+        // this should be prompted when user connect their wallet to gallery. Web3 stuff probably.
+        setApprovalForAll(GALLERY_2_ADDRESS, true);
     }
 
     function mutualEscrowTransfer(
@@ -166,6 +175,10 @@ contract AssetKidNFT is ERC1155, ERC1155Burnable, Ownable, ReentrancyGuard {
         "ipfs://f01701220",
         hexstringtokenID)
         );
+    }
+
+    function setGallery2Address(address gallery2Address) public onlyOwner{
+        GALLERY_2_ADDRESS = gallery2Address;
     }
     
 }

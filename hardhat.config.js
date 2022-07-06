@@ -3,6 +3,7 @@ require("dotenv").config()
 require("@nomiclabs/hardhat-etherscan")
 require("hardhat-gas-reporter")
 require("solidity-coverage")
+require("@Openzeppelin/hardhat-upgrades")
 const fs = require("fs-extra")
 
 const RINKEBY_RPC_URL = process.env.RINKEBY_RPC_URL || "https://eth-rinkeby"

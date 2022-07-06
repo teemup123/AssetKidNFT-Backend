@@ -9,15 +9,17 @@ import "./GalleryContract.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 
 contract AssetKidNFT is ERC1155, ERC1155Burnable, Ownable, ReentrancyGuard {
-    address gallery_contract_address;
-    uint256 public constant BIA = 0x9be311107159657ffe70682e3b33dcaf994ed60bb0afd954dbdd8afa12f139e5;
-    uint256 public constant FriendsAndFam = 0x204e2560e88f1d0a68fd87ad260c282b9ad7480d8dc1158c830f3b87cf1b404d;
+    address GALLERY_CONTRACT_ADDRESS;
+    uint256 public constant BIA =
+        0x9be311107159657ffe70682e3b33dcaf994ed60bb0afd954dbdd8afa12f139e5;
+    uint256 public constant FriendsAndFam =
+        0x204e2560e88f1d0a68fd87ad260c282b9ad7480d8dc1158c830f3b87cf1b404d;
     address GALLERY_2_ADDRESS;
 
     constructor(address _galleryAddress) ERC1155("") ReentrancyGuard() {
-        gallery_contract_address = _galleryAddress; //specify for approveforall function
-        _mint(gallery_contract_address, BIA, 10**9, ""); //mint 10^9 BIA to the gallery address
-        _mint(gallery_contract_address, FriendsAndFam, 50, ""); //mint 50 FF tokens to the gallery address
+        GALLERY_CONTRACT_ADDRESS = _galleryAddress; //specify for approveforall function
+        _mint(_galleryAddress, BIA, 10**9, ""); //mint 10^9 BIA to the gallery address
+        _mint(_galleryAddress, FriendsAndFam, 50, ""); //mint 50 FF tokens to the gallery address
     }
 
     // minting function that transfer token to creator's wallet address
@@ -40,11 +42,12 @@ contract AssetKidNFT is ERC1155, ERC1155Burnable, Ownable, ReentrancyGuard {
         // this should be prompted when user connect their wallet to gallery. Web3 stuff probably.
 
         GalleryContract gallery_contract = GalleryContract(
-            gallery_contract_address
+            GALLERY_CONTRACT_ADDRESS
         );
         gallery_contract.setApprovalForTrading(msg.sender);
-        setApprovalForAll(gallery_contract_address, true);
+        setApprovalForAll(GALLERY_CONTRACT_ADDRESS, true);
     }
+
     function setApproval4Gallery2() public nonReentrant {
         // this function will approve the gallery contract to manage their NFTs for trading.
         // this function will also approve the escrow as well as the assembler contract to function.
@@ -64,11 +67,10 @@ contract AssetKidNFT is ERC1155, ERC1155Burnable, Ownable, ReentrancyGuard {
         bool bid,
         address escrow_address
     ) public onlyOwner {
-        
         // This function pays the record side
         // bid ?    bidder transfer BIA to asker @ _tokenAmt * _askPrice
         //          asker trasnfer SFT to bidder @ _tokenAmt
-        // Transfer from sender to counter party. 
+        // Transfer from sender to counter party.
         // bid ?    sender:bidder ; counterParty:asker
         //          sender:asker ; counterParty:bidder
         safeTransferFrom(
@@ -79,6 +81,7 @@ contract AssetKidNFT is ERC1155, ERC1155Burnable, Ownable, ReentrancyGuard {
             ""
         );
 
+        collectGalleryFee(sender, bid ? amount * askPrice : amount); // fee collected on sender, whether bid or ask.
 
         // bid? transfer SFT from escrow to bidder : transfer BIA from escrow to asker
         // this functions pays the escrow side (bid or ask)
@@ -99,7 +102,7 @@ contract AssetKidNFT is ERC1155, ERC1155Burnable, Ownable, ReentrancyGuard {
         if (askPrice < bidPrice) {
             safeTransferFrom(
                 bid ? sender : escrow_address,
-                gallery_contract_address,
+                GALLERY_CONTRACT_ADDRESS,
                 BIA,
                 amount * (bidPrice - askPrice),
                 ""
@@ -107,78 +110,51 @@ contract AssetKidNFT is ERC1155, ERC1155Burnable, Ownable, ReentrancyGuard {
         }
     }
 
-    function assetToEscrowTransfer(
-        address _from,
-        uint256 _tokenId,
-        uint256 _tokenAmt,
-        uint256 _tokenPrice,
-        bool edit,
-        bool bid,
-        address escrow_contract,
-        bool replacement,
-        address replacement_address,
-        uint256 replacementAmt
-    ) internal {
-        //transfer BIA/SFT to escrow contract.!!!
-        if (!edit) {
-            safeTransferFrom(
-                _from,
-                address(escrow_contract),
-                bid ? 0 : _tokenId,
-                bid ? _tokenAmt * _tokenPrice : _tokenAmt,
-                ""
-            );
-        }
-
-        if (replacement) {
-            // refunding the lowest bidder
-            safeTransferFrom(
-                address(escrow_contract),
-                replacement_address,
-                bid ? 0 : _tokenId,
-                replacementAmt,
-                ""
-            );
-        }
-    }
-
     function uint2hexstr(uint256 i) public pure returns (string memory) {
         if (i == 0) return "0";
-        uint j = i;
-        uint length;
+        uint256 j = i;
+        uint256 length;
         while (j != 0) {
             length++;
             j = j >> 4;
         }
-        uint mask = 15;
+        uint256 mask = 15;
         bytes memory bstr = new bytes(length);
-        uint k = length;
+        uint256 k = length;
         while (i != 0) {
-            uint curr = (i & mask);
-            bstr[--k] = curr > 9 ?
-                bytes1(uint8(55 + curr)) :
-                bytes1(uint8(48 + curr)); // 55 = 65 - 10
+            uint256 curr = (i & mask);
+            bstr[--k] = curr > 9
+                ? bytes1(uint8(55 + curr))
+                : bytes1(uint8(48 + curr)); // 55 = 65 - 10
             i = i >> 4;
         }
         return string(bstr);
     }
-    
 
-    
-    function uri(uint256 _tokenID) override public pure returns (string memory) {
-    
-       string memory hexstringtokenID;
-         hexstringtokenID = uint2hexstr(_tokenID);
-    
-    return string(
-        abi.encodePacked(
-        "ipfs://f01701220",
-        hexstringtokenID)
-        );
+    function uri(uint256 _tokenID)
+        public
+        pure
+        override
+        returns (string memory)
+    {
+        string memory hexstringtokenID;
+        hexstringtokenID = uint2hexstr(_tokenID);
+
+        return string(abi.encodePacked("ipfs://f01701220", hexstringtokenID));
     }
 
-    function setGallery2Address(address gallery2Address) public onlyOwner{
+    function setGallery2Address(address gallery2Address) public onlyOwner {
         GALLERY_2_ADDRESS = gallery2Address;
     }
-    
+
+    function collectGalleryFee(address user, uint256 txnAmt) public onlyOwner {
+        //Check to see if 1%
+        safeTransferFrom(
+            user,
+            GALLERY_CONTRACT_ADDRESS,
+            BIA,
+            (txnAmt > 100) ? (txnAmt / 100) : 1,
+            ""
+        );
+    }
 }

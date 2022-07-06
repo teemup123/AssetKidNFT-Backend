@@ -848,6 +848,8 @@ describe("Testing Escrow Features", function () {
 
         await assetKidNftContract.connect(creator).setApproval4Gallery()
 
+        await galleryContract.connect(owner).fundAddress(creator.address, 100)
+
         await galleryContract
             .connect(creator)
             .createTierCollectable(_baseTier, _subsequentTier, hexArray)
@@ -1067,7 +1069,7 @@ describe("Testing Escrow Features", function () {
 
             assert.equal(
                 await assetKidNftContract.balanceOf(collector1.address, hexId),
-                10000 - bid_amount * bid_price
+                10000 - bid_amount * bid_price - 1 
             )
 
             hexId = await galleryContract.getHexId(2)
@@ -1103,7 +1105,7 @@ describe("Testing Escrow Features", function () {
             hexId = await galleryContract.getHexId(0)
             assert.equal(
                 await assetKidNftContract.balanceOf(creator.address, hexId),
-                bid_amount * bid_price
+                100 + bid_amount * bid_price - 1
             )
             hexId = await galleryContract.getHexId(2)
             assert.equal(
@@ -1139,7 +1141,7 @@ describe("Testing Escrow Features", function () {
 
             assert.equal(
                 await assetKidNftContract.balanceOf(collector1.address, hexId),
-                10000 - bid_amount * bid_price
+                10000 - bid_amount * bid_price -1 
             )
             hexId = await galleryContract.getHexId(2)
 
@@ -1176,7 +1178,7 @@ describe("Testing Escrow Features", function () {
             hexId = await galleryContract.getHexId(0)
             assert.equal(
                 await assetKidNftContract.balanceOf(creator.address, hexId),
-                bid_amount * bid_price
+                100 + bid_amount * bid_price -1 
             )
             hexId = await galleryContract.getHexId(2)
             assert.equal(
@@ -1316,7 +1318,7 @@ describe("Testing Escrow Features", function () {
             hexId = await galleryContract.getHexId(0)
             assert.equal(
                 await assetKidNftContract.balanceOf(galleryContract.address, hexId),
-                10 ** 9 - 10000 + (20 - 10) * 5
+                10 ** 9 - 10000 - 100 + (20 - 10) * 5 + 2
             )
             hexId = await galleryContract.getHexId(2)
             assert.equal(
@@ -1538,7 +1540,7 @@ describe("Bid Array Overflow", function () {
         hexId = await galleryContract.getHexId(0)
         assert.equal(
             await assetKidNftContract.balanceOf(lastCollector.address, hexId),
-            1000
+            1000 - 1 
         )
     })
 
@@ -1650,6 +1652,8 @@ describe("Ask Array Overflow", function () {
                 await assetKidNftContract
                     .connect(lastCollector)
                     .setApproval4Gallery()
+                // fund wallet 
+                await galleryContract.connect(owner).fundAddress(lastCollector.address, 1)
 
                 // Saturate ask and offer array
                 await galleryContract
@@ -1667,7 +1671,7 @@ describe("Ask Array Overflow", function () {
                 .connect(creator)
                 .safeTransferFrom(creator.address, account.address, token2, 1, "0x")
 
-            // Send some eth so they can interact with the system
+            // Send some eth so they can interact with the system. 
             await owner.sendTransaction({
                 to: account.address,
                 value: ethers.utils.parseEther("10"),
@@ -1675,6 +1679,9 @@ describe("Ask Array Overflow", function () {
 
             // set approval
             await assetKidNftContract.connect(account).setApproval4Gallery()
+
+            // Give account 1 BIA to pay for fee
+            await galleryContract.connect(owner).fundAddress(account.address, 1)
 
             // Saturate ask and offer array
             await galleryContract
@@ -1694,6 +1701,8 @@ describe("Ask Array Overflow", function () {
         await assetKidNftContract.connect(collector1).setApproval4Gallery()
         collector1Price = 10
         collctor1Amount = 1
+        // fund collector 1
+        await galleryContract.connect(owner).fundAddress(collector1.address, 1)
 
         await galleryContract
             .connect(collector1)
@@ -1721,6 +1730,8 @@ describe("Ask Array Overflow", function () {
             .connect(creator)
             .safeTransferFrom(creator.address, collector1.address, token2, 1, "0x")
 
+        // fund collector1 with BIA 
+        await galleryContract.connect(owner).fundAddress(collector1.address, 1)
 
         await assetKidNftContract.connect(collector1).setApproval4Gallery()
         collector1Price = 110 // highest price was 60+49 = 109

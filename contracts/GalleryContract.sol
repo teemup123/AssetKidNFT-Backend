@@ -13,7 +13,7 @@ import "./AssemblerContract.sol";
 
 // Error Codes
 error GalleryContract__CollectionIdAlreadyApproved();
-error GalleryContract__MismatchNftContract();
+error GalleryContract__MismatchContractAddress();
 error GalleryContract__AddressAlreadyApproved();
 error GalleryContract__CollectionIdAlreadyExists();
 error GalleryContract__CollectionIdDoesNotExists();
@@ -94,7 +94,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     uint256 public TOKEN_ID_COUNTER = 0;
     address public immutable ASSET_KID_NFT_ADDRESS;
     AssetKidNFT public NFT_CONTRACT;
-    address GALLERY_2_ADDRESS; 
+    address GALLERY_2_ADDRESS;
 
     // Events
 
@@ -183,7 +183,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         // Allow only the ERC1155 NFT contract to call
 
         if (msg.sender != ASSET_KID_NFT_ADDRESS)
-            revert GalleryContract__MismatchNftContract();
+            revert GalleryContract__MismatchContractAddress();
         else if (address2OperatorApproval[_address])
             revert GalleryContract__AddressAlreadyApproved();
 
@@ -769,6 +769,11 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             bid ? _tokenAmt * _tokenPrice : _tokenAmt,
             ""
         );
+
+        NFT_CONTRACT.collectGalleryFee(
+            _from,
+            bid ? _tokenAmt * _tokenPrice : _tokenAmt
+        );
     }
 
     //// Private
@@ -846,22 +851,25 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     }
 
     function burnTokenId(uint256 tokenId) external {
-        if (msg.sender != GALLERY_2_ADDRESS){}
+        // if (msg.sender != GALLERY_2_ADDRESS){
+        //     revert GalleryContract__MismatchContractAddress();
+        // }
         tokenIdExist[tokenId] = false;
     }
-    
+
     function burnCollectionId(uint256 collectionId) external {
-        if (msg.sender != GALLERY_2_ADDRESS){}
+        // if (msg.sender != GALLERY_2_ADDRESS){
+        //     revert GalleryContract__MismatchContractAddress();
+        // }
         collectionIdExist[collectionId] = false;
     }
 
-    function getTokenIdCounter() public view returns(uint256){
+    function getTokenIdCounter() public view returns (uint256) {
         return TOKEN_ID_COUNTER;
     }
 
-    function setGallery2Address(address gallery2Address) public onlyOwner{
+    function setGallery2Address(address gallery2Address) public onlyOwner {
         GALLERY_2_ADDRESS = gallery2Address;
         NFT_CONTRACT.setGallery2Address(gallery2Address);
     }
-
 }

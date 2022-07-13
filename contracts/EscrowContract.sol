@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./AssetKidNFT.sol";
+import "./AssetKidNFTUpgradeable.sol";
 
 error EscrowContract__ArrayFull();
 error EscrowContract__ContractLocked();
@@ -59,12 +59,13 @@ contract EscrowContract is ERC1155Holder, Ownable {
 
     constructor(
         address _nftAddress,
+        address galleryAddress,
         uint256 _nativeTokenId,
         bool _commercialTier
     ) {
         address collectionAddress = _nftAddress;
-        AssetKidNFT nft_contract = AssetKidNFT(collectionAddress);
-        nft_contract.setApproval4Gallery(); // when created, this contract will approve gallery to manage their tokens.
+        AssetKidNftUpgradeable nft_contract = AssetKidNftUpgradeable(collectionAddress);
+        nft_contract.setApprovalForAll(galleryAddress, true); // when created, this contract will approve gallery to manage their tokens.
         tokenId = _nativeTokenId;
         COMMERCIALIZABLE = _commercialTier ? true : false;
         contractState = ContractState.UNVERIFIED;

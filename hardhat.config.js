@@ -4,7 +4,7 @@ require("@nomiclabs/hardhat-etherscan")
 require("hardhat-gas-reporter")
 require("solidity-coverage")
 require("@Openzeppelin/hardhat-upgrades")
-const fs = require("fs-extra")
+
 
 const RINKEBY_RPC_URL = process.env.RINKEBY_RPC_URL || "https://eth-rinkeby"
 const PRIVATE_KEY = process.env.PRIVATE_KEY || "0x000" // Find a way to encrypt and decrypt on hard hat or smt

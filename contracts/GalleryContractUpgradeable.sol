@@ -3,43 +3,35 @@
 pragma solidity ^0.8.0;
 
 // IMPORTS
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./AssetKidNFT.sol";
+
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
 import "./EscrowContract.sol";
 import "./AssemblerContract.sol";
 
 // Error Codes
-error GalleryContract__CollectionIdAlreadyApproved();
-error GalleryContract__MismatchContractAddress();
-error GalleryContract__AddressAlreadyApproved();
-error GalleryContract__CollectionIdAlreadyExists();
-error GalleryContract__CollectionIdDoesNotExists();
-error GalleryContract__TokenIdDoesNotExist();
-error GalleryContract__TooManyUnapprovedCollection();
-error GalleryContract__MintingError();
-error GalleryContract__AddressNotApproved();
-error GalleryContract__SubmissionError();
-error GalleryContract__CollectionIdNotApproved();
-error GalleryContract__BidDoesNotExist();
-error GalleryContract__AskDoesNotExist();
-error GalleryContract__NotCreator();
-error GalleryContract__NotCollector();
+error GalleryContractV0__CollectionIdAlreadyApproved();
+error GalleryContractV0__MismatchContractAddress();
+error GalleryContractV0__AddressAlreadyApproved();
+error GalleryContractV0__CollectionIdAlreadyExists();
+error GalleryContractV0__CollectionIdDoesNotExists();
+error GalleryContractV0__TokenIdDoesNotExist();
+error GalleryContractV0__TooManyUnapprovedCollection();
+error GalleryContractV0__MintingError();
+error GalleryContractV0__AddressNotApproved();
+error GalleryContractV0__SubmissionError();
+error GalleryContractV0__CollectionIdNotApproved();
+error GalleryContractV0__BidDoesNotExist();
+error GalleryContractV0__AskDoesNotExist();
+error GalleryContractV0__NotCreator();
+error GalleryContractV0__NotCollector();
+error GalleryContractV0__NotAdmin();
+error GalleryContractV0__CannotLowLevelCallNftContract();
 
 //Libraries
-import "./library/deployAssetKidNFT.sol";
 import "./library/deployEscrowContract.sol";
 import "./library/deployAssemblerContract.sol";
 
-/** @title A contract that governs the AssetKid's backend operations.
- *  @author Natha Dean Tansukawat
- *  @notice This contract is not yet finalized.
- *  @dev This contract will interact with the ERC1155, Assembler Contracts, and Escrow Contracts, on the user's behalf.
- */
-
-contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
+contract GalleryContractUpgradeable is ERC1155HolderUpgradeable {
     // Type Declaration
 
     enum COLLECTIONTYPE {
@@ -90,11 +82,11 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
 
     // State Variables
 
-    uint256 public collectionIdCounter = 0;
-    uint256 public TOKEN_ID_COUNTER = 0;
-    address public immutable ASSET_KID_NFT_ADDRESS;
-    AssetKidNFT public NFT_CONTRACT;
+    uint256 public collectionIdCounter;
+    uint256 public TOKEN_ID_COUNTER;
+    address public ASSET_KID_NFT_ADDRESS;
     address GALLERY_2_ADDRESS;
+    address GALLERY_ADMIN_ADDRESS;
 
     // Events
 
@@ -120,28 +112,37 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
     modifier onlyVerified(uint256 collectionId) {
         // Only allowing approved collectionId
         if (!collectionId2galleryApproval[collectionId]) {
-            revert GalleryContract__CollectionIdNotApproved();
+            revert GalleryContractV0__CollectionIdNotApproved();
         }
 
-        // Only allowing Operator Approved Addresses.
-        if (!address2OperatorApproval[msg.sender])
-            revert GalleryContract__AddressNotApproved();
+        // // Only allowing Operator Approved Addresses.
+        // if (!address2OperatorApproval[msg.sender])
+        //     revert GalleryContractV0__AddressNotApproved();
+        _;
+    }
+
+    modifier onlyGalleryAdmin() {
+        if (msg.sender != GALLERY_ADMIN_ADDRESS) {
+            revert GalleryContractV0__NotAdmin();
+        }
         _;
     }
 
     // Function
 
-    //// Constructor
-    constructor() ReentrancyGuard() {
-        address assetKidNftAddress = DeployAssetKidNFT.deployContract(
-            address(this)
-        ); //deploy nft_management contract right off the bat.
-        ASSET_KID_NFT_ADDRESS = assetKidNftAddress;
-        NFT_CONTRACT = AssetKidNFT(assetKidNftAddress);
+    //// Initializer
 
+    function initialize(
+        address _galleryAdminAddress,
+        uint256 _bia,
+        uint256 _friendsAndFam
+    ) public initializer {
+        collectionIdCounter = 0;
+        TOKEN_ID_COUNTER = 0;
+        GALLERY_ADMIN_ADDRESS = _galleryAdminAddress;
         mapTokenIdsAndEscrow(
             collectionIdCounter,
-            0x9be311107159657ffe70682e3b33dcaf994ed60bb0afd954dbdd8afa12f139e5,
+            _bia,
             address(0),
             uint16(1000)
         );
@@ -157,7 +158,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
 
         mapTokenIdsAndEscrow(
             collectionIdCounter,
-            0x204e2560e88f1d0a68fd87ad260c282b9ad7480d8dc1158c830f3b87cf1b404d,
+            _friendsAndFam,
             address(0),
             uint16(1000)
         );
@@ -178,31 +179,23 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
 
     //// External
 
-    function setApprovalForTrading(address _address) external {
-        // This function will be called by the NFT contract and will allow address to access the trading functions of the escrow contract
-        // Allow only the ERC1155 NFT contract to call
+    // function setApprovalForTrading(address _address) external {
+    //     // This function will be called by the NFT contract and will allow address to access the trading functions of the escrow contract
+    //     // Allow only the ERC1155 NFT contract to call
 
-        if (msg.sender != ASSET_KID_NFT_ADDRESS)
-            revert GalleryContract__MismatchContractAddress();
-        else if (address2OperatorApproval[_address])
-            revert GalleryContract__AddressAlreadyApproved();
+    //     if (msg.sender != ASSET_KID_NFT_ADDRESS)
+    //         revert GalleryContractV0__MismatchContractAddress();
+    //     else if (address2OperatorApproval[_address])
+    //         revert GalleryContractV0__AddressAlreadyApproved();
 
-        address2OperatorApproval[_address] = true;
-    }
+    //     address2OperatorApproval[_address] = true;
+    // }
 
-    function fundAddress(address adr, uint256 amount) external onlyOwner {
-        NFT_CONTRACT.safeTransferFrom(
-            address(this),
-            adr,
-            tokenId2Hex[0],
-            amount,
-            ""
-        );
-    }
+    // FUND ADDRESS IS NOW IN THE NFT CONTRACT
 
     //// Public
 
-    function approveCollectionId(uint256 _tokenId) public onlyOwner {
+    function approveCollectionId(uint256 _tokenId) public onlyGalleryAdmin {
         // This function will approve the collection Id after item is verified by the gallery.
 
         EscrowContract commercialEscrow;
@@ -250,7 +243,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             tokenId2CollectionId[tokenId]
         ];
         if (creatorAddress != msg.sender) {
-            revert GalleryContract__NotCreator();
+            revert GalleryContractV0__NotCreator();
         }
         EscrowContract commercialEscrow = EscrowContract(
             tokenId2EscrowContract[tokenId]
@@ -258,12 +251,12 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         (uint256 biaSupported, ) = commercialEscrow.getYourSupportInfo(
             creatorAddress
         );
-        NFT_CONTRACT.safeTransferFrom(
+
+        nftSafeTransfer(
             address(commercialEscrow),
             creatorAddress,
             tokenId2Hex[0],
-            biaSupported,
-            ""
+            biaSupported
         );
     }
 
@@ -279,14 +272,13 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
                 msg.sender
             );
 
-        NFT_CONTRACT.safeTransferFrom(
+        nftSafeTransfer(
             escrowAddress,
             msg.sender,
             (collectionState == uint8(3))
                 ? tokenId2Hex[tokenId]
                 : tokenId2Hex[0],
-            (collectionState == uint8(3)) ? sftOwed : sftOwed * collectionPrice,
-            ""
+            (collectionState == uint8(3)) ? sftOwed : sftOwed * collectionPrice
         );
     }
 
@@ -295,17 +287,17 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             msg.sender ==
             collectionId2CreatorAddress[tokenId2CollectionId[tokenId]]
         ) {
-            revert GalleryContract__NotCollector();
+            revert GalleryContractV0__NotCollector();
         }
         EscrowContract escrow_contract = getEscrowContract(tokenId);
         (, , uint256 price, ) = escrow_contract.getContractStatus(); // price set by the creator
         uint256 biaAmount = price * sftAmount; // amount BIA to transfer = price set by creator * sftAmount support
-        NFT_CONTRACT.safeTransferFrom(
+
+        nftSafeTransfer(
             msg.sender,
             address(escrow_contract),
             tokenId2Hex[0],
-            biaAmount,
-            ""
+            biaAmount
         );
         escrow_contract.support(msg.sender, sftAmount, false);
     }
@@ -314,17 +306,17 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         EscrowContract escrow_contract = getEscrowContract(tokenId);
         (, uint256 sftOwed) = escrow_contract.getYourSupportInfo(msg.sender);
         if (sftOwed == 0) {
-            revert GalleryContract__NotCollector();
+            revert GalleryContractV0__NotCollector();
         }
         // transfer nft back
         (, , uint256 price, ) = escrow_contract.getContractStatus();
         uint256 biaOwed = sftOwed * price;
-        NFT_CONTRACT.safeTransferFrom(
+
+        nftSafeTransfer(
             address(escrow_contract),
             msg.sender,
             tokenId2Hex[0],
-            biaOwed,
-            ""
+            biaOwed
         );
         // cancel record
         escrow_contract.support(msg.sender, sftOwed, true);
@@ -340,23 +332,25 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             msg.sender !=
             collectionId2CreatorAddress[tokenId2CollectionId[tokenId]]
         ) {
-            revert GalleryContract__NotCreator();
+            revert GalleryContractV0__NotCreator();
         }
 
         EscrowContract escrow_contract = getEscrowContract(tokenId);
-        //transfer the sft to the escrow contract (cancel: transfer the sft back to creator)
-        NFT_CONTRACT.safeTransferFrom(
-            cancel ? address(escrow_contract) : msg.sender,
-            cancel ? msg.sender : address(escrow_contract),
-            tokenId2Hex[tokenId],
-            cancel
-                ? NFT_CONTRACT.balanceOf(
-                    address(escrow_contract),
-                    tokenId2Hex[tokenId]
-                )
-                : amount,
-            ""
-        );
+
+        if (cancel) {
+            nftTransferAll(
+                address(escrow_contract),
+                msg.sender,
+                tokenId2Hex[tokenId]
+            );
+        } else {
+            nftSafeTransfer(
+                msg.sender,
+                address(escrow_contract),
+                tokenId2Hex[tokenId],
+                amount
+            );
+        }
 
         //record in escrow
         escrow_contract.commercialize(msg.sender, amount, price, cancel);
@@ -366,9 +360,9 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         uint16[10] memory _quantity,
         uint16[10] memory _percentage,
         uint256[10] memory hexArray
-    ) public nonReentrant {
+    ) public {
         if (address2UnapprovedCollection[msg.sender] >= 5)
-            revert GalleryContract__TooManyUnapprovedCollection();
+            revert GalleryContractV0__TooManyUnapprovedCollection();
 
         // The minimum percentage equals 0.1%.
         // The maximum amount of token per collection equals 1000;
@@ -382,7 +376,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         uint8 maxQuantIndex;
 
         for (uint8 i; i < 10; i++) {
-            if (_quantity[i] >= 1000) revert GalleryContract__MintingError();
+            if (_quantity[i] >= 1000) revert GalleryContractV0__MintingError();
             running_tally += (_quantity[i] * _percentage[i]);
             (maxQuantity < _quantity[i])
                 ? maxQuantity = _quantity[i]
@@ -391,17 +385,18 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
                 ? maxQuantIndex = i
                 : maxQuantIndex = maxQuantIndex;
         }
-        if (running_tally != 1000) revert GalleryContract__MintingError();
+        if (running_tally != 1000) revert GalleryContractV0__MintingError();
 
         for (uint8 i; i < 10; i++) {
             if (_quantity[i] > 0) {
                 address escrowContractAddress = DeployEscrowContract
                     .deployContract(
                         ASSET_KID_NFT_ADDRESS,
+                        address(this),
                         TOKEN_ID_COUNTER,
                         (i == maxQuantIndex) ? true : false
                     );
-                NFT_CONTRACT.mintToken(msg.sender, hexArray[i], _quantity[i]);
+                nftMintToken(msg.sender, hexArray[i], _quantity[i]);
                 tokenIdArray[i] = TOKEN_ID_COUNTER;
                 mapTokenIdsAndEscrow(
                     collectionIdCounter,
@@ -426,16 +421,16 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         uint16 _baseTier,
         uint16[10] memory _subsequentTier,
         uint256[10] memory hexIdArray
-    ) public nonReentrant {
+    ) public {
         // the miniumum percentage is 0.1%
         // Variable -> 1 = 0.1%, 10 = 1%, 100 = 10%, 1000 = 100%.
         // base tier must be divide 1000(100%) with no remainder
         // Each subsequent tier must divide the previous with no remainder.
 
         if (address2UnapprovedCollection[msg.sender] >= 5)
-            revert GalleryContract__TooManyUnapprovedCollection();
+            revert GalleryContractV0__TooManyUnapprovedCollection();
         else if (1000 % _baseTier != 0 || _baseTier >= 1000)
-            revert GalleryContract__MintingError();
+            revert GalleryContractV0__MintingError();
 
         for (uint8 i; i < 10; i++) {
             // Compare the first element of _subsequentTier to the _baseTier and make divisibility sure
@@ -445,12 +440,12 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
                     _subsequentTier[0] % _baseTier != 0 ||
                     _subsequentTier[0] <= _baseTier ||
                     _subsequentTier[i + 1] % _subsequentTier[i] != 0
-                ) revert GalleryContract__MintingError();
+                ) revert GalleryContractV0__MintingError();
                 continue;
             }
 
             if (1000 % _subsequentTier[i] != 0)
-                revert GalleryContract__MintingError();
+                revert GalleryContractV0__MintingError();
 
             //Break if the next tier doesnt exist
             if (_subsequentTier[i + 1] == 0) {
@@ -461,7 +456,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             if (
                 _subsequentTier[i + 1] <= _subsequentTier[i] ||
                 _subsequentTier[i + 1] % _subsequentTier[i] != 0
-            ) revert GalleryContract__MintingError();
+            ) revert GalleryContractV0__MintingError();
         }
 
         uint256 collectionId = collectionIdCounter;
@@ -474,14 +469,15 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         // create an escrow contract for the base tier
         address escrowContractAddress = DeployEscrowContract.deployContract(
             ASSET_KID_NFT_ADDRESS,
+            address(this),
             TOKEN_ID_COUNTER,
             true
         );
 
         // minting base tier token
-        NFT_CONTRACT.mintToken(creator, hexIdArray[0], baseQuantity);
+        nftMintToken(creator, hexIdArray[0], baseQuantity);
         address assemblerContractAddress = DeployAssemblerContract
-            .deployContract(ASSET_KID_NFT_ADDRESS);
+            .deployContract(ASSET_KID_NFT_ADDRESS, address(this));
 
         tokenIdArray[0] = TOKEN_ID_COUNTER;
         mapTokenIdsAndEscrow(
@@ -493,14 +489,16 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
 
         for (uint8 i; i < 10; i++) {
             uint16 quantity = 1000 / _subsequentTier[i];
-            NFT_CONTRACT.mintToken(
-                assemblerContractAddress,
-                hexIdArray[i + 1],
-                quantity
-            ); // subsequent tier tokens are minted to the assembler contract.
+
+            nftMintToken(assemblerContractAddress, hexIdArray[i + 1], quantity); // subsequent tier tokens are minted to the assembler contract.
 
             address subsequentEscrowContract = DeployEscrowContract
-                .deployContract(ASSET_KID_NFT_ADDRESS, TOKEN_ID_COUNTER, false); //creating new escrow for subsequent tokens
+                .deployContract(
+                    ASSET_KID_NFT_ADDRESS,
+                    address(this),
+                    TOKEN_ID_COUNTER,
+                    false
+                ); //creating new escrow for subsequent tokens
             tokenIdArray[i + 1] = TOKEN_ID_COUNTER;
             mapTokenIdsAndEscrow(
                 collectionIdCounter,
@@ -542,24 +540,22 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             );
 
         if (_tokenIdSubmitAmt % submitToExchange != 0)
-            revert GalleryContract__SubmissionError(); //make sure that the submission amt is a multiple of the exchange rate
+            revert GalleryContractV0__SubmissionError(); //make sure that the submission amt is a multiple of the exchange rate
 
         uint256 amtMultiplier = _tokenIdSubmitAmt / submitToExchange;
 
-        NFT_CONTRACT.safeTransferFrom(
+        nftSafeTransfer(
             msg.sender,
             assembler_contract_address,
             tokenId2Hex[_tokenIdSubmit],
-            _tokenIdSubmitAmt,
-            ""
+            _tokenIdSubmitAmt
         );
 
-        NFT_CONTRACT.safeTransferFrom(
+        nftSafeTransfer(
             assembler_contract_address,
             msg.sender,
             tokenId2Hex[_tokenIdExchange],
-            exchangeToSubmit * amtMultiplier,
-            ""
+            exchangeToSubmit * amtMultiplier
         );
 
         emit tierExchange(
@@ -590,7 +586,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
 
         EscrowContract escrow_contract = getEscrowContract(tokenId);
 
-        NFT_CONTRACT.mutualEscrowTransfer(
+        nftMutualEscrowTransfer(
             sender, // sender
             counterAddress, // counterParty
             tokenId2Hex[tokenId], // tokenId
@@ -675,19 +671,18 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
 
             if (refAddress == msg.sender && active) {
                 escrow_contract.recordBidAsk(msg.sender, 0, 0, true, i, bid);
-                NFT_CONTRACT.safeTransferFrom(
+                nftSafeTransfer(
                     address(escrow_contract),
                     msg.sender,
                     bid ? 0 : tokenId,
-                    refundAmount,
-                    ""
+                    refundAmount
                 );
                 return;
                 // refund the BIA / SFT
             }
         }
 
-        revert GalleryContract__NotCollector();
+        revert GalleryContractV0__NotCollector();
     }
 
     //// Internal
@@ -699,7 +694,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         address _creatorAddress
     ) internal {
         if (collectionIdExist[_collectionId])
-            revert GalleryContract__CollectionIdAlreadyExists();
+            revert GalleryContractV0__CollectionIdAlreadyExists();
 
         // Mapping
         collectionIdExist[_collectionId] = true;
@@ -752,28 +747,22 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
             );
 
         if (replacement) {
-            // refunding the lowest bidder
-            NFT_CONTRACT.safeTransferFrom(
+            nftSafeTransfer(
                 address(escrow_contract),
                 replacement_address,
                 bid ? tokenId2Hex[0] : tokenId2Hex[_tokenId],
-                replacementAmt,
-                ""
+                replacementAmt
             );
         }
-        // transfering to escrow
-        NFT_CONTRACT.safeTransferFrom(
+
+        nftSafeTransfer(
             _from,
             address(escrow_contract),
             bid ? tokenId2Hex[0] : tokenId2Hex[_tokenId],
-            bid ? _tokenAmt * _tokenPrice : _tokenAmt,
-            ""
-        );
-
-        NFT_CONTRACT.collectGalleryFee(
-            _from,
             bid ? _tokenAmt * _tokenPrice : _tokenAmt
         );
+
+        nftCollectGalleryFee(_from, _tokenAmt * _tokenPrice );
     }
 
     //// Private
@@ -816,7 +805,7 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         )
     {
         if (!tokenIdExist[_tokenId])
-            revert GalleryContract__TokenIdDoesNotExist();
+            revert GalleryContractV0__TokenIdDoesNotExist();
 
         return (
             tokenId2CollectionId[_tokenId],
@@ -846,21 +835,21 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         returns (address)
     {
         if (!collectionIdExist[_collectionId])
-            revert GalleryContract__CollectionIdDoesNotExists();
+            revert GalleryContractV0__CollectionIdDoesNotExists();
         return (collectionId2CreatorAddress[_collectionId]);
     }
 
     function burnTokenId(uint256 tokenId) external {
-        // if (msg.sender != GALLERY_2_ADDRESS){
-        //     revert GalleryContract__MismatchContractAddress();
-        // }
+        if (msg.sender != GALLERY_2_ADDRESS){
+            revert GalleryContractV0__MismatchContractAddress();
+        }
         tokenIdExist[tokenId] = false;
     }
 
     function burnCollectionId(uint256 collectionId) external {
-        // if (msg.sender != GALLERY_2_ADDRESS){
-        //     revert GalleryContract__MismatchContractAddress();
-        // }
+        if (msg.sender != GALLERY_2_ADDRESS){
+            revert GalleryContractV0__MismatchContractAddress();
+        }
         collectionIdExist[collectionId] = false;
     }
 
@@ -868,8 +857,125 @@ contract GalleryContract is Ownable, ReentrancyGuard, ERC1155Holder {
         return TOKEN_ID_COUNTER;
     }
 
-    function setGallery2Address(address gallery2Address) public onlyOwner {
+    function setGallery2Address(address gallery2Address)
+        public
+        onlyGalleryAdmin
+    {
         GALLERY_2_ADDRESS = gallery2Address;
-        NFT_CONTRACT.setGallery2Address(gallery2Address);
+        (bool success, ) = ASSET_KID_NFT_ADDRESS.call(
+            abi.encodeWithSignature(
+                "setGallery2Address(address)",
+                gallery2Address
+            )
+        );
+        if (!success) {
+            revert GalleryContractV0__CannotLowLevelCallNftContract();
+        }
     }
+
+    function setNftContractAddress(address nftContractAddress)
+        public
+        onlyGalleryAdmin
+    {
+        ASSET_KID_NFT_ADDRESS = nftContractAddress;
+    }
+
+    function nftSafeTransfer(
+        address from,
+        address to,
+        uint256 tokenId,
+        uint256 amount
+    ) internal {
+        (bool success, ) = ASSET_KID_NFT_ADDRESS.call(
+            abi.encodeWithSignature(
+                "safeTransferFrom(address,address,uint256,uint256,bytes)",
+                from,
+                to,
+                tokenId,
+                amount,
+                ""
+            )
+        );
+        if (!success) {
+            revert GalleryContractV0__CannotLowLevelCallNftContract();
+        }
+    }
+
+    function nftMutualEscrowTransfer(
+        address sender,
+        address counterParty,
+        uint256 tokenId,
+        uint256 amount,
+        uint256 askPrice,
+        uint256 bidPrice,
+        bool bid,
+        address escrowAddress
+    ) internal {
+        (bool success, ) = ASSET_KID_NFT_ADDRESS.call(
+            abi.encodeWithSignature(
+                "mutualEscrowTransfer(address,address,uint256,uint256,uint256,uint256,bool,address)",
+                sender,
+                counterParty,
+                tokenId,
+                amount,
+                askPrice,
+                bidPrice,
+                bid,
+                escrowAddress
+            )
+        );
+        if (!success) {
+            revert GalleryContractV0__CannotLowLevelCallNftContract();
+        }
+    }
+
+    function nftMintToken(
+        address adr,
+        uint256 tokenId,
+        uint16 quantity
+    ) internal {
+        (bool success, ) = ASSET_KID_NFT_ADDRESS.call(
+            abi.encodeWithSignature(
+                "mintToken(address,uint256,uint16)",
+                adr,
+                tokenId,
+                quantity
+            )
+        );
+        if (!success) {
+            revert GalleryContractV0__CannotLowLevelCallNftContract();
+        }
+    }
+
+    function nftCollectGalleryFee(address adr, uint256 txnAmount) internal {
+        (bool success, ) = ASSET_KID_NFT_ADDRESS.call(
+            abi.encodeWithSignature(
+                "collectGalleryFee(address,uint256)",
+                adr,
+                txnAmount
+            )
+        );
+        if (!success) {
+            revert GalleryContractV0__CannotLowLevelCallNftContract();
+        }
+    }
+
+    function nftTransferAll(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal {
+        (bool success, ) = ASSET_KID_NFT_ADDRESS.call(
+            abi.encodeWithSignature(
+                "transferAll(address,address,uint256)",
+                from,
+                to,
+                tokenId
+            )
+        );
+        if (!success) {
+            revert GalleryContractV0__CannotLowLevelCallNftContract();
+        }
+    }
+
 }

@@ -3,16 +3,18 @@
 pragma solidity ^0.8.0;
 
 import "../EscrowContract.sol";
-import "../GalleryContract.sol";
+import "../GalleryContractUpgradeable.sol";
 
 library DeployEscrowContract {
     function deployContract(
         address nftAddress,
+        address galleryAddress,
         uint256 tokenIdCounter,
         bool commercialTier
     ) public returns (address contractDeployedAddress) {
         EscrowContract contractDeployed = new EscrowContract(
             nftAddress,
+            galleryAddress,
             tokenIdCounter,
             commercialTier
         );
@@ -55,7 +57,7 @@ library DeployEscrowContract {
         address galleryContractAddress
     ) public view returns (uint16 submitToExchange, uint16 exchangeToSubmit) {
         
-        GalleryContract galleryContract = GalleryContract(
+        GalleryContractUpgradeable galleryContract = GalleryContractUpgradeable(
             galleryContractAddress
         );
 
@@ -102,7 +104,7 @@ library DeployEscrowContract {
         uint256 token_Id_counter,
         address galleryContractAddress
     ) public view returns (uint256[10] memory otherTokenIds) {
-        GalleryContract galleryContract = GalleryContract(
+        GalleryContractUpgradeable galleryContract = GalleryContractUpgradeable(
             galleryContractAddress
         );
         // Both create token functions create token consecutively -> query
@@ -143,7 +145,7 @@ library DeployEscrowContract {
             address escrowAddress
         )
     {
-        GalleryContract galleryContract = GalleryContract(
+        GalleryContractUpgradeable galleryContract = GalleryContractUpgradeable(
             galleryContractAddress
         );
         EscrowContract escrow_contract = galleryContract.getEscrowContract(tokenId);
@@ -154,13 +156,13 @@ library DeployEscrowContract {
         // collection state 3 = verified : collector calling will be transferred sft
         // colelction state 2 = SUPPORT-Cancelled : collector calling will be refunded NFT that is owed
         if (collectionState == 0 || collectionState == 1) {
-            revert GalleryContract__CollectionIdNotApproved();
+            revert GalleryContractV0__CollectionIdNotApproved();
         }
         
         (, sftOwed) = escrow_contract.getYourSupportInfo(sender);
 
         if (sftOwed == 0){
-            revert GalleryContract__NotCollector();
+            revert GalleryContractV0__NotCollector();
         }
 
         escrow_contract.claimedSupport(sender);

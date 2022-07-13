@@ -4,25 +4,30 @@ pragma solidity ^0.8.0;
 
 import "./GalleryContractUpgradeable.sol";
 import "./EscrowContract.sol";
-import "./AssetKidNFTUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
+
+// or low level call these
 
 error GalleryContract2__NotCreator();
 error GalleryContract2__CollectionIdAlreadyApproved();
 error GalleryContract2__SubmissionError();
+error GalleryContract2__CannotLowLevelCallNftContract();
 
 import "./library/deployEscrowContract.sol";
 
-contract GalleryContract2 {
-    address public immutable GALLERY_CONTRACT_ADDRESS;
-    address public immutable NFT_CONTRACT_ADDRESS;
-    AssetKidNftUpgradeable public immutable NFT_CONTRACT;
-    GalleryContractUpgradeable public immutable galleryContract;
+contract GalleryContract2Upgradeable is ERC1155HolderUpgradeable {
+    address public GALLERY_CONTRACT_ADDRESS;
+    address public ASSET_KID_NFT_ADDRESS;
 
-    constructor(address galleryContractAddress, address assetKidNftAddress) {
+    GalleryContractUpgradeable public galleryContract;
+
+    function initialize(
+        address galleryContractAddress,
+        address assetKidNftAddress
+    ) public initializer {
         GALLERY_CONTRACT_ADDRESS = galleryContractAddress;
         galleryContract = GalleryContractUpgradeable(galleryContractAddress);
-        NFT_CONTRACT_ADDRESS = assetKidNftAddress;
-        NFT_CONTRACT = AssetKidNftUpgradeable(assetKidNftAddress);
+        ASSET_KID_NFT_ADDRESS = assetKidNftAddress; // convert to low level call instead
     }
 
     function burnCollection(uint256 tokenId) public {
@@ -49,7 +54,7 @@ contract GalleryContract2 {
             burnTierCollectable(tokenId, msg.sender);
             galleryContract.burnCollectionId(collectionId);
             return;
-        } else{
+        } else {
             revert GalleryContract2__SubmissionError();
         }
         // call to remap other collectionIdExist
@@ -92,11 +97,7 @@ contract GalleryContract2 {
                 collectionType == 1 //SIMPLE COLLECTABLE
             ) {
                 galleryContract.burnTokenId(otherTokeIds[i]);
-                NFT_CONTRACT.burn(
-                    sender,
-                    hexId,
-                    NFT_CONTRACT.balanceOf(msg.sender, hexId)
-                );
+                nftBurn(sender, hexId);
             }
         }
     }
@@ -111,16 +112,23 @@ contract GalleryContract2 {
         if (commercializable) {
             // and commercial token
             galleryContract.burnTokenId(tokenId);
-            NFT_CONTRACT.burn(
-                sender,
-                galleryContract.getHexId(tokenId),
-                NFT_CONTRACT.balanceOf(
-                    sender,
-                    galleryContract.getHexId(tokenId)
-                )
-            ); // if collection not verified, assembly cannot exchange token !
+            uint256 hexId = galleryContract.getHexId(tokenId);
+            nftBurn(sender, hexId);
         } else {
             revert GalleryContract2__SubmissionError();
+        }
+    }
+
+    function nftBurn(address account, uint256 tokenId) internal {
+        (bool success, ) = ASSET_KID_NFT_ADDRESS.call(
+            abi.encodeWithSignature(
+                "burnAll(address,uint256)",
+                account,
+                tokenId
+            )
+        );
+        if (!success) {
+            revert GalleryContract2__CannotLowLevelCallNftContract();
         }
     }
 }

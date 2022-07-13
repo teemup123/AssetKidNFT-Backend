@@ -6,9 +6,9 @@ import "../AssemblerContract.sol";
 
 library DeployAssemblerContract {
 
-    function deployContract(address nftAddress) public returns(address contractDeployedAddress){
+    function deployContract(address nftAddress, address galleryAddress) public returns(address contractDeployedAddress){
 
-        AssemblerContract contractDeployed = new AssemblerContract(nftAddress);
+        AssemblerContract contractDeployed = new AssemblerContract(nftAddress, galleryAddress);
         return ( address(contractDeployed) );
     }
 

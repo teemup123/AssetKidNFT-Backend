@@ -3,10 +3,10 @@ const { network, deployments, ethers } = require("hardhat")
 const {
     developmentChains,
     networkConfig,
+    BIA,
+    FFT
 } = require("../../helper-hardhat-config")
-const { deployLib } = require("../../scripts/helpful-scripts")
-const bia = "0x9be311107159657ffe70682e3b33dcaf994ed60bb0afd954dbdd8afa12f139e5"
-const fft = "0x204e2560e88f1d0a68fd87ad260c282b9ad7480d8dc1158c830f3b87cf1b404d"
+const { deployProject } = require("../../scripts/helpful-scripts")
 const zero_address = "0x0000000000000000000000000000000000000000"
 const hexArray = [
     "0xa85ac9d365ca47ee0c7570f8979a4f78b4e3b16c9422db94864a6c25637c662e",
@@ -22,96 +22,6 @@ const hexArray = [
 ]
 upgrades.silenceWarnings()
 
-async function deployProject() {
-    ;[
-        owner,
-        galleryAdmin,
-        creator,
-        collector1,
-        lastCollector,
-        creator1,
-        creator2,
-    ] = await ethers.getSigners()
-
-    AssetKidNftContract = await ethers.getContractFactory(
-        "AssetKidNftUpgradeable"
-    )
-    let BiaWalletContract = await ethers.getContractFactory("BiaWalletContract")
-
-    // deploying Wallet Contract
-
-    const biaWalletContract = await upgrades.deployProxy(
-        BiaWalletContract,
-        [galleryAdmin.address, bia, fft],
-        { initializer: "__init__BiaWalletContract" }
-    )
-
-    // deploying assetKid Nft contract proxy
-
-    const assetKidNftContract = await upgrades.deployProxy(
-        AssetKidNftContract,
-        [galleryAdmin.address, biaWalletContract.address, bia, fft],
-        { initializer: "initialize" }
-    )
-
-    adminAddress = await assetKidNftContract.getAdminAddress()
-
-    // deploying libraries
-
-    const libraries = await deployLib()
-
-    // deploying galleryContract proxy
-
-    GalleryContract = await ethers.getContractFactory(
-        "GalleryContractUpgradeable",
-        {
-            libraries: {
-                DeployAssemblerContract: String(
-                    libraries.assemblerLibContract.address
-                ),
-                DeployEscrowContract: String(libraries.escrowLib.address),
-            },
-        }
-    )
-
-    const galleryContract = await upgrades.deployProxy(
-        GalleryContract,
-        [galleryAdmin.address, bia, fft],
-        {
-            initializer: "initialize",
-            unsafeAllow: ["external-library-linking"],
-        }
-    )
-
-    // setting contract addresses by admin.
-
-    biaWalletContract
-        .connect(galleryAdmin)
-        .setNftContractAddress(assetKidNftContract.address)
-
-    galleryContract
-        .connect(galleryAdmin)
-        .setNftContractAddress(assetKidNftContract.address)
-
-    assetKidNftContract
-        .connect(galleryAdmin)
-        .setGalleryAddress(galleryContract.address)
-
-    return {
-        biaWalletContract,
-        galleryContract,
-        assetKidNftContract,
-        owner,
-        galleryAdmin,
-        creator,
-        creator1,
-        creator2,
-        collector1,
-        lastCollector,
-        libraries
-    }
-}
-
 describe("Testing Basic Functions Behind Proxies", function () {
     let projectInfo, galleryContract, assetKidNftContract, biaWalletContract
 
@@ -126,7 +36,7 @@ describe("Testing Basic Functions Behind Proxies", function () {
         it("Checking BIA in project wallet = 10^9", async function () {
             const currentValue = await assetKidNftContract.balanceOf(
                 biaWalletContract.address,
-                bia
+                BIA
             )
             const expectedValue = String(10 ** 9)
             assert.equal(currentValue.toString(), expectedValue)
@@ -135,7 +45,7 @@ describe("Testing Basic Functions Behind Proxies", function () {
         it("Checking FFT in project wallet = 50", async function () {
             const currentValue = await assetKidNftContract.balanceOf(
                 biaWalletContract.address,
-                fft
+                FFT
             )
             const expectedValue = String(50)
             assert.equal(currentValue.toString(), expectedValue)
@@ -1871,7 +1781,7 @@ describe("Support Functions", function () {
         biaInEscrow = await assetKidNftContract
             .connect(owner)
             .balanceOf(escrowContract.address, hexId)
-        //console.log(`bia in escrow ${biaInEscrow}`)
+        //console.log(`BIA in escrow ${biaInEscrow}`)
 
         await galleryContract.connect(galleryAdmin).approveCollectionId(2)
         //
@@ -1887,7 +1797,7 @@ describe("Support Functions", function () {
         creatorBia = await assetKidNftContract
             .connect(creator)
             .balanceOf(creator.address, hexId)
-        // console.log(`bia in escrow after collection approves ${biaInEscrow}`)
+        // console.log(`BIA in escrow after collection approves ${biaInEscrow}`)
         // supportInfo = await escrowContract.connect(creator).getYourSupportInfo(creator.address)
         // escrowStatus = await escrowContract.connect(creator).getContractStatus()
         // console.log(`support info ${supportInfo}`)
@@ -1920,7 +1830,7 @@ describe("Support Functions", function () {
         biaInEscrow = await assetKidNftContract
             .connect(owner)
             .balanceOf(escrowContract.address, hexId)
-        //console.log(`bia in escrow ${biaInEscrow}`)
+        //console.log(`BIA in escrow ${biaInEscrow}`)
 
         await galleryContract.connect(galleryAdmin).approveCollectionId(2)
         //
@@ -1930,7 +1840,7 @@ describe("Support Functions", function () {
             .balanceOf(collector1.address, hexId)
         //console.log(`Creator Bia ${creatorBia}`)
 
-        //console.log(`bia in escrow after collection approves ${biaInEscrow}`)
+        //console.log(`BIA in escrow after collection approves ${biaInEscrow}`)
         // supportInfo = await escrowContract.connect(creator).getYourSupportInfo(creator.address)
         // escrowStatus = await escrowContract.connect(creator).getContractStatus()
         // console.log(`support info ${supportInfo}`)

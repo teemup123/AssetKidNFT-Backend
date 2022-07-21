@@ -15,6 +15,8 @@ contract AssetKidNftUpgradeable is ERC1155BurnableUpgradeable {
     address public PROJECT_WALLET_ADDRESS;
     uint256 public BIA;
     uint256 public FriendsAndFam;
+    string public BIA_URL;
+    string public FFT_URL;
 
     modifier onlyGalleryAdmin() {
         if (msg.sender != GALLERY_ADMIN_ADDRESS) {
@@ -54,7 +56,8 @@ contract AssetKidNftUpgradeable is ERC1155BurnableUpgradeable {
         setApprovalForAll(GALLERY_ADMIN_ADDRESS, true); // Approving Gallery Admin to manage
     }
 
-    function burnAll ( /// do you want to override this alltogether ? 
+    function burnAll(
+        /// do you want to override this alltogether ?
         address account,
         uint256 id
     ) public onlyGallery2 {
@@ -168,14 +171,34 @@ contract AssetKidNftUpgradeable is ERC1155BurnableUpgradeable {
 
     function uri(uint256 _tokenID)
         public
-        pure
+        view
         override
         returns (string memory)
     {
+        if (_tokenID == BIA) {
+            return BIA_URL;
+        } else if (_tokenID == FriendsAndFam){
+            return FFT_URL;
+        }
         string memory hexstringtokenID;
         hexstringtokenID = uint2hexstr(_tokenID);
 
-        return string(abi.encodePacked("ipfs://f01701220", hexstringtokenID));
+        return
+            string(
+                abi.encodePacked(
+                    "ipfs://f01701220",
+                    hexstringtokenID,
+                    "/metadata.json"
+                )
+            );
+    }
+
+    function setNewBiaMetaData(string memory new_uri) public onlyGalleryAdmin {
+        BIA_URL = new_uri;
+    }
+
+    function setNewFftMetaData(string memory new_uri) public onlyGalleryAdmin {
+        FFT_URL = new_uri;
     }
 
     function setGalleryAddress(address galleryProxyAddress)
@@ -204,13 +227,4 @@ contract AssetKidNftUpgradeable is ERC1155BurnableUpgradeable {
         uint256 amount = balanceOf(from, tokenId);
         safeTransferFrom(from, to, tokenId, amount, "");
     }
-    // gallery admin is not the owner of BIA or approved to transfer on AssetKids' behalf.
-    // Move this back to gallery
-
-    // function fundAddress( //SMT WRONG HERE. Gallery admin is not approved to manage Creator's Bia ?
-    //     address adr,
-    //     uint256 amount
-    // ) public {
-    //     safeTransferFrom(address(this), adr, BIA, amount, "");
-    // }
 }

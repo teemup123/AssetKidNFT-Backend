@@ -18,6 +18,8 @@ contract AssetKidNftUpgradeable is ERC1155BurnableUpgradeable {
     string public BIA_URL;
     string public FFT_URL;
 
+    mapping(uint256 => uint256) public tokenId2Hex;
+
     modifier onlyGalleryAdmin() {
         if (msg.sender != GALLERY_ADMIN_ADDRESS) {
             revert AssetKidNft__NotAdmin();
@@ -74,11 +76,13 @@ contract AssetKidNftUpgradeable is ERC1155BurnableUpgradeable {
     function mintToken(
         address _addressMintTo,
         uint256 _tokenId,
-        uint16 _quantity
+        uint16 _quantity,
+        uint256 tokenIdCounter
     ) external onlyGallery {
         // Called in createSimpleCollectable & createTierCollectable
         // CALLABLE ONLY BY GALLERY1 PROXY CONTRACT.
         _mint(_addressMintTo, _tokenId, _quantity, "");
+        tokenId2Hex[tokenIdCounter]=_tokenId;
     }
 
     function mutualEscrowTransfer(
@@ -181,7 +185,7 @@ contract AssetKidNftUpgradeable is ERC1155BurnableUpgradeable {
             return FFT_URL;
         }
         string memory hexstringtokenID;
-        hexstringtokenID = uint2hexstr(_tokenID);
+        hexstringtokenID = uint2hexstr(tokenId2Hex[_tokenID]);
 
         return
             string(

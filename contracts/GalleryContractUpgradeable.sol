@@ -949,10 +949,11 @@ contract GalleryContractUpgradeable is ERC1155HolderUpgradeable {
     ) internal {
         (bool success, ) = ASSET_KID_NFT_ADDRESS.call(
             abi.encodeWithSignature(
-                "mintToken(address,uint256,uint16)",
+                "mintToken(address,uint256,uint16,uint256)",
                 adr,
                 tokenId,
-                quantity
+                quantity,
+                TOKEN_ID_COUNTER
             )
         );
         if (!success) {

@@ -85,6 +85,9 @@ async function deployProject() {
 
     // deploying galleryContract proxy
 
+    const assemblerLib = String(libraries.assemblerLibContract.address)
+    const escrowLib = String(libraries.escrowLib.address)
+
     GalleryContract = await ethers.getContractFactory(
         "GalleryContractUpgradeable",
         {
@@ -96,7 +99,7 @@ async function deployProject() {
             },
         }
     )
-
+    
     const galleryContract = await upgrades.deployProxy(
         GalleryContract,
         [galleryAdmin.address, BIA, FFT],
@@ -143,6 +146,10 @@ async function deployProject() {
     await galleryContract
         .connect(galleryAdmin)
         .setGallery2Address(gallery2Contract.address)
+    
+    await assetKidNftContract
+        .connect(creator)
+        .setApprovalForAll(gallery2Contract.address, true)
 
     await assetKidNftContract
         .connect(creator1)
@@ -157,6 +164,8 @@ async function deployProject() {
         galleryContract,
         gallery2Contract,
         assetKidNftContract,
+        assemblerLib,
+        escrowLib,
         owner,
         galleryAdmin,
         creator,

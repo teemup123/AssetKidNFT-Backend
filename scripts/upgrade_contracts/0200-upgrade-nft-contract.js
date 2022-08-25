@@ -4,9 +4,9 @@ const {
     VERIFICATION_BLOCK_CONFIRMATIONS,
     BIA,
     FFT,
-} = require("../helper-hardhat-config")
-const { verify } = require("../utils/verify")
-const { deployLib } = require("./helpful-scripts")
+} = require("../../helper-hardhat-config")
+const { verify } = require("../../utils/verify")
+const { deployLib } = require("../helpful-scripts")
 let proxy_address = "0x47acEe75cE302ACdab8f4Db78835aA719D220bB4"
 
 async function main() {
@@ -27,7 +27,6 @@ async function main() {
     )
 
     await assetKidNftContract.deployTransaction.wait(6)
-    
     verify(assetKidNftContract.address)
 }
 

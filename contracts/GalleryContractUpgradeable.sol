@@ -107,6 +107,13 @@ contract GalleryContractUpgradeable is ERC1155HolderUpgradeable {
         address exchanger
     );
 
+    event collectionVerified(address creatorAddress, uint256 collectionId);
+
+    event collectionCommercialized(
+        address creatorAddress,
+        uint256 collectionId
+    );
+
     // Modifiers
 
     modifier onlyVerified(uint256 collectionId) {
@@ -236,6 +243,7 @@ contract GalleryContractUpgradeable is ERC1155HolderUpgradeable {
             }
         }
         collectionId2galleryApproval[tokenId2CollectionId[_tokenId]] = true;
+        emit collectionVerified(creatorAddress, _tokenId);
     }
 
     function claimBIA(uint256 tokenId) public {
@@ -354,6 +362,11 @@ contract GalleryContractUpgradeable is ERC1155HolderUpgradeable {
 
         //record in escrow
         escrow_contract.commercialize(msg.sender, amount, price, cancel);
+
+        emit collectionCommercialized(
+            collectionId2CreatorAddress[tokenId2CollectionId[tokenId]],
+            tokenId2CollectionId[tokenId]
+        );
     }
 
     function createSimpleCollectable(
@@ -762,7 +775,7 @@ contract GalleryContractUpgradeable is ERC1155HolderUpgradeable {
             bid ? _tokenAmt * _tokenPrice : _tokenAmt
         );
 
-        nftCollectGalleryFee(_from, _tokenAmt * _tokenPrice );
+        nftCollectGalleryFee(_from, _tokenAmt * _tokenPrice);
     }
 
     //// Private
@@ -840,14 +853,14 @@ contract GalleryContractUpgradeable is ERC1155HolderUpgradeable {
     }
 
     function burnTokenId(uint256 tokenId) external {
-        if (msg.sender != GALLERY_2_ADDRESS){
+        if (msg.sender != GALLERY_2_ADDRESS) {
             revert GalleryContractV0__MismatchContractAddress();
         }
         tokenIdExist[tokenId] = false;
     }
 
     function burnCollectionId(uint256 collectionId) external {
-        if (msg.sender != GALLERY_2_ADDRESS){
+        if (msg.sender != GALLERY_2_ADDRESS) {
             revert GalleryContractV0__MismatchContractAddress();
         }
         collectionIdExist[collectionId] = false;
@@ -977,5 +990,4 @@ contract GalleryContractUpgradeable is ERC1155HolderUpgradeable {
             revert GalleryContractV0__CannotLowLevelCallNftContract();
         }
     }
-
 }

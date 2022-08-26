@@ -52,7 +52,9 @@ contract AssetKidNftUpgradeable is ERC1155BurnableUpgradeable {
         GALLERY_ADMIN_ADDRESS = _galleryAdminAddress;
         PROJECT_WALLET_ADDRESS = _projectWalletAddress;
         BIA = _bia;
+        tokenId2Hex[0]= BIA;
         FriendsAndFam = _friendsAndFam;
+        tokenId2Hex[1]= FriendsAndFam;
         _mint(_projectWalletAddress, BIA, 10**9, ""); //mint 10^9 BIA to the gallery address
         _mint(_projectWalletAddress, FriendsAndFam, 50, ""); //mint 50 FF tokens to the gallery address
         setApprovalForAll(GALLERY_ADMIN_ADDRESS, true); // Approving Gallery Admin to manage
@@ -179,9 +181,9 @@ contract AssetKidNftUpgradeable is ERC1155BurnableUpgradeable {
         override
         returns (string memory)
     {
-        if (_tokenID == BIA) {
+        if (tokenId2Hex[_tokenID] == BIA) {
             return BIA_URL;
-        } else if (_tokenID == FriendsAndFam){
+        } else if (tokenId2Hex[_tokenID] == FriendsAndFam){
             return FFT_URL;
         }
         string memory hexstringtokenID;
